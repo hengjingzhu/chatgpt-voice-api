@@ -90,11 +90,11 @@ class ShortVoiceContent(View):
     
         inputmessage = kwargs['inputmessage']
 
-        #print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
+        print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
 
         # 如果 inputmessage 是'重置角色'，或者'角色重置'，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #  # 重置角色,会原有对话保存到og中，清空redis数据
-        #print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
+        print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
         if "重置角色" in inputmessage or "角色重置" in inputmessage:
             print(RoleVoiceAttribution_this_dialog,'重置角色的属性')
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
@@ -133,8 +133,9 @@ class ShortVoiceContent(View):
 
         # 如果有历史会话记录和对话属性，那就不再改变,把数据和参数发给 chatgpt,获得回复消息.
         # 回复结果:('你好，我叫qin。很高兴能和您聊天！', [{'role': 'system', 'content': '你会先自我介绍，你的名字叫 qin'}, {'role': 'user', 'content': '你好啊'}, {'role': 'assistant', 'content': '你好，我叫qin。很高兴能和您聊天！'}], 56)
+        print("在调取openai信息中")
         reply_message_obj = OpenAIModel().reply_message(inputmessage,history_messages,RoleVoiceAttribution_this_dialog['system_role_description'])
-        #print(reply_message_obj)
+        print(reply_message_obj)
         response_message_chatgpt = reply_message_obj[0]
         new_messages = reply_message_obj[1]
         total_used_tokens = reply_message_obj[2]
