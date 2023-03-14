@@ -73,4 +73,5 @@ WORKDIR /chatgpt_voice_api
 
 # 安装 requirements.txt 模块
 RUN python -m pip install --upgrade pip
+RUN pip install --upgrade pip setuptools
 RUN pip install -r requirements.txt
