@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/3.2/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,10 +21,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-q8%nk7%q!3vguny1nplqkr+h-5t$wqd&r8f6^b-c$j*jgg@7q)'
 
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ["*"]
 
@@ -80,11 +81,11 @@ WSGI_APPLICATION = 'chatgptapi.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'postgres',
-        'USER': 'postgres',
-        'PASSWORD': 'da322065',
-        'HOST': '106.14.169.64',
-        'PORT': '5432',
+        'NAME': os.environ.get('POSTGRESQL_INTERNAL_DBNAME'),
+        'USER': os.environ.get('POSTGRESQL_INTERNAL_USERNAME'),
+        'PASSWORD': os.environ.get('POSTGRESQL_INTERNAL_PASSWORD'),
+        'HOST': os.environ.get('POSTGRESQL_INTERNAL_HOST'),
+        'PORT': os.environ.get('POSTGRESQL_INTERNAL_PORT'),
         'client_encoding':'UTF8',
         'default_transaction_isolation':'read committed',
         'OPTIONS': {
@@ -96,21 +97,21 @@ DATABASES = {
 CACHES = {
     "default": {
                 "BACKEND": "django_redis.cache.RedisCache",
-                "LOCATION": "redis://106.14.169.64/1",		#数字代表使用redis哪个数据库
+                "LOCATION": "redis://{}/1".format(os.environ.get('REDIS_INTERNAL_HOST')),		#数字代表使用redis哪个数据库
                             "OPTIONS": 
                             {
                                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                                "PASSWORD": "da322065",
+                                "PASSWORD": os.environ.get('REDIS_INTERNAL_PASSWORD'),         
                             }
                 },
 
     "ali_voice_token": {
                 "BACKEND": "django_redis.cache.RedisCache",
-                "LOCATION": "redis://106.14.169.64/2",		#数字代表使用redis哪个数据库
+                "LOCATION": "redis://{}/2".format(os.environ.get('REDIS_INTERNAL_HOST')),		#数字代表使用redis哪个数据库
                             "OPTIONS": 
                             {
                                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
-                                "PASSWORD": "da322065",
+                                "PASSWORD": os.environ.get('REDIS_INTERNAL_PASSWORD'),
                             }
                 },
 
@@ -202,36 +203,27 @@ SIMPLEUI_LOGO = '/static/image/adai.png'
 
 
 
-
-
-
-
-
-
-
-
-
-
 STATICFILES_DIRS = ['chatgptapiv1/static/']
-STATIC_ROOT = 'D:\\r9000p\\djangoprojects\\chatgpt_voice_api\\chatgptapi\\chatgptapiv1\\static\\voice'
+
+# 静态文件在容器内的目录
+STATIC_ROOT = '/djangostatic'
 
 
 # 当前主机ip
-MY_HOST_NAME = "http://192.168.31.188:8000"
+MY_HOST_NAME = "http://{}:8000".format(os.environ.get('ALI_ECS_EXTERNAL_IP'))
 
 # jwt token key 
-JWT_TOKEN_KEY = 'davidzhu'
-
+JWT_TOKEN_KEY = os.environ.get('JWT_TOKEN_KEY')
 
 # openai 配置
-OPENAI_SECRETKEY = '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'
-OPENAI_ORG_ID ='org-Ug1ptVTtSfFWOVws9UDAKZMG'
+OPENAI_SECRETKEY = os.environ.get('OPENAI_SECRETKEY')
+OPENAI_ORG_ID = os.environ.get('OPENAI_ORG_ID')
 
 # 阿里云文本合成配置
-ALIYUN_APP_KEY_WOMAN = "6vIxNDjOnchm4pPq"
+ALIYUN_APP_KEY_WOMAN = os.environ.get('ALIYUN_APP_KEY_WOMAN')
 # 阿里云的access_id
-ALIYUN_ACCESS_ID="LTAI5tCZ18K7UxAjYcjikf3w"
+ALIYUN_ACCESS_ID = os.environ.get('ALIYUN_ACCESS_ID')
 # 阿里云的 accesskey_secret
-ALIYUN_ACCESSKEY_SECRET="9bytciqJRhF2Wb8W1NNAp5NyYP01f8"
+ALIYUN_ACCESSKEY_SECRET = os.environ.get('ALIYUN_ACCESSKEY_SECRET')
 # 存储在 redis 的数据库token 的key的值
-ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS = "ALI_VOICE_ACCESS_TOKEN_KEY"
+ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS = os.environ.get('ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS')
