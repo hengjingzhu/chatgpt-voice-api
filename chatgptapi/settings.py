@@ -223,7 +223,7 @@ MY_HOST_NAME = "http://192.168.31.188:8000"
 JWT_TOKEN_KEY = 'davidzhu'
 
 
-# openai 配置
+# openai 配置f
 OPENAI_SECRETKEY = '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'
 OPENAI_ORG_ID ='org-Ug1ptVTtSfFWOVws9UDAKZMG'
 
