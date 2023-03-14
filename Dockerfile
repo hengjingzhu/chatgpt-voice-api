@@ -63,6 +63,7 @@ RUN mkdir /chatgpt_voice_api
 
 # 创建一个 static 静态文件夹，用来存放 python manage.py collectstatic 的目录
 RUN mkdir /djangostatic
+RUN mkdir /djangostatic/voice
 
 # 把当前路径下的 django项目 文件夹(比如myobject1)的内容 拷贝到容器 /djangotest 文件夹下
 # 注意如果是文件夹的话，这里的必须是相对路径
@@ -70,6 +71,10 @@ COPY . /chatgpt_voice_api
 
 # 进入到容器内工作目录就是 /anglissData
 WORKDIR /chatgpt_voice_api
+
+# 设置时间为上海时间
+RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
+
 
 # 安装 requirements.txt 模块
 RUN python -m pip install --upgrade pip
