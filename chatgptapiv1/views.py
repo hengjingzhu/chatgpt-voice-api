@@ -26,7 +26,7 @@ from chatgptapiv1.models import RoleVoiceAttribution,BlackBox
 def GetVoiceUrl_tts(response_message_chatgpt,username,RoleVoiceAttribution_this_dialog):
     print(RoleVoiceAttribution_this_dialog)
 
-    response_message_chatgpt = response_message_chatgpt.replace('\n', '')    
+    #response_message_chatgpt = response_message_chatgpt.replace('\n', '')    
     system_role_alivoice_role = RoleVoiceAttribution_this_dialog['system_role_alivoice_role']
     system_role_alivoice_samplerate = RoleVoiceAttribution_this_dialog['system_role_alivoice_samplerate']
     system_role_alivoice_speechrate = int(RoleVoiceAttribution_this_dialog['system_role_alivoice_speechrate'])
@@ -199,7 +199,7 @@ class ShortVoiceContent(View):
         # 获取成功后，更新redis缓存数据库的信息 history_messages和RoleVoiceAttribution_this_dialog
 
 
-        result = {'code':200,'message':'nihao',"voice":voice_url}
+        result = {'code':200,'message':response_message_chatgpt,"voice":voice_url}
         print(result)
         return JsonResponse(result)
 

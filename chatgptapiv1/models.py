@@ -17,7 +17,7 @@ class UserInfo(AbstractUser):
     ]
 
     username = models.CharField("用户",null=False,blank=False,max_length=255,unique=True)
-    customer_type = models.CharField("客户类型",blank=True,null=True,max_length=255,choices=customer_type)
+    customer_type = models.CharField("客户类型",blank=True,null=True,max_length=255,choices=customer_type,help_text="只有超级管理员才能创建超级用户")
     token_expired_time = models.DateTimeField("token到期时间",blank=True,null=True)
 
     # 无限制用户就填写 'unlimited'

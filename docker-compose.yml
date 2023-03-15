@@ -11,8 +11,12 @@ services:
     volumes:
       # 把静态文件夹目录挂载出来,方便 nginx 转发
       - /opt/DjangoChatGPTAPI/djangostatic:/djangostatic
+
+    deploy:
+      replicas : 3
+        
     ports:
-      - "8000:8000"
+      - "8000-8002:8000"
     restart: always
 
      # 限制容器日志的大小

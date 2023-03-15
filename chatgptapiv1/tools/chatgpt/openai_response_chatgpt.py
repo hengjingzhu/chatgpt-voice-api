@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from chatgptapiv1.tools.chatgpt.config import *
 
 import openai
@@ -59,8 +60,8 @@ class OpenAIModel():
     #    "content": "The 2020 World Series was played at Globe Life Field in Arlington, Texas, USA.",
     #    "role": "assistant"
     #  }
-    #return response.choices[0].message
-    # print(response)
+    # return response.choices[0].message
+    print('GPT返回的信息',response)
     return response
 
   def reply_message(self,inputmessage,start_messages,system_role_description='you are an helpful ai'):

@@ -60,16 +60,21 @@ class UserInfoAdmin(UserAdmin):
         max_tokens = frontend_formdata.get('max_tokens')
         jwt_token = ''
 
-        # 无限制超级用户客户
-        if max_tokens and frontend_formdata['customer_type'] == 'superuser':
+        # 无限制超级用户客户，只有超级管理员才能创建超级用户
+        if max_tokens and frontend_formdata['customer_type'] == 'superuser' and request.user.is_superuser:
             obj.api_request_left = 'unlimited'
             obj.token_expired_time = None
         
             # 制作 jwt_token
             jwt_token = JWTTokenMethod(username,max_tokens).maketoken_superuser()
             obj.jwt_token = jwt_token
-
-
+        
+        # 不是超级管理员的话，创建不了超级用户，数据会被清空
+        elif max_tokens and frontend_formdata['customer_type'] == 'superuser' and not request.user.is_superuser:
+            obj.api_request_left = None
+            obj.token_expired_time = None
+            obj.jwt_token = ''
+            obj.customer_type = None
 
         # 无限制时间，限制次数用户
         elif max_tokens and frontend_formdata['customer_type'] == 'UnlimitedTime_LimitedRequest':
@@ -128,6 +133,10 @@ class UserInfoAdmin(UserAdmin):
 
     # 管理员返回所有，其他管理员只能看到部分字段
     def change_view(self, request, object_id, form_url='', extra_context=None):
+        
+        user_in_view_form_OBJ = UserInfo.objects.get(id=object_id)
+        self.readonly_fields = ['jwt_token','status','creator']
+
         if request.user.is_superuser:
             self.fieldsets = (
             (None,{'fields':('username','password','first_name','last_name','email')}),
@@ -139,7 +148,7 @@ class UserInfoAdmin(UserAdmin):
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
             
-        else:
+        elif not request.user.is_superuser and user_in_view_form_OBJ != request.user:
             self.fieldsets = (
             (None,{'fields':('username','password','first_name','last_name','email')}),
             # 自定义字段显示
@@ -149,6 +158,21 @@ class UserInfoAdmin(UserAdmin):
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
+            
+        elif not request.user.is_superuser and user_in_view_form_OBJ == request.user:
+
+            self.readonly_fields = ['jwt_token','status','creator','customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status']
+
+            self.fieldsets = (
+            (None,{'fields':('username','password','first_name','last_name','email')}),
+            # 自定义字段显示
+            (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
+    
+            #(gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
+    
+            (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
+        )
+          
         
         return super().change_view(
             request, object_id, form_url, extra_context=extra_context,
@@ -237,4 +261,4 @@ class BlackBoxAdmin(admin.ModelAdmin):
             return qs
         
         # 其他后台管理人员登陆只能看到自己创建的用户，但是不包含 superuser以及不包含sub-admin组的其他成员,以及只能看到自己创建的成员
-        return qs.filter(Q(user__creator=request.user))
+        return qs.filter(Q(user__creator=request.user) | Q(user=request.user))

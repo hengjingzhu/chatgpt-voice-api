@@ -88,7 +88,7 @@ class TextToVoice():
             return voice_url
         else:
             print('长音频制作中,在工作')
-            time.sleep(3)
+            time.sleep(1)
             return self.get_voice_url(taskid)
 
 
@@ -111,7 +111,7 @@ class TextToVoice():
                 self.retry_time=0
                 return "no short voice url"
             
-        except Exception:            
+        except Exception:
             voice_binary_data = response_voice_data_short.content
             
             # 然后把数据存到数据库里, 把页面返回给客户
