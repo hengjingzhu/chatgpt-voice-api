@@ -14,6 +14,14 @@ def check_jwt(fn):
         # 从请求体中获取 post 消息
         received_message_dict = json.loads(request.body)
         
+
+        # 不启动 nginx 配置
+        #voice_url_base = settings.MY_HOST_NAME+settings.STATIC_URL
+
+        # 启动 nginx 的时候配置
+        voice_url_base = settings.NGINX_HOST_NAME+settings.STATIC_URL
+        
+
         try:
             inputmessage = received_message_dict['inputmessage'].strip()
             jwt_token = received_message_dict['authorization'].strip()
@@ -33,26 +41,26 @@ def check_jwt(fn):
                     break
                 else:
                     #print(userinfo_redis)
-                    voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/wronguser.wav'
+                    voice_url = voice_url_base + 'voice/wronguser.wav'
                     result = {'code':200,'message':'您的用户名找不到,请联系老朱',"voice":voice_url}
                     return JsonResponse(result)
 
             #print(userinfo_redis,type(userinfo_redis))
             # 如果缓存数据库中的令牌和用户令牌不一致，告知您的令牌已经更新，请输入正确的令牌
             if jwt_token != userinfo_redis['userinfo']['jwt_token']:
-                voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/neednewtoken.wav'
+                voice_url = voice_url_base + 'voice/neednewtoken.wav'
                 result = {'code':200,'message':'您的令牌已经更新,请输入最新的令牌，或者请找老朱哦',"voice":voice_url}
                 return JsonResponse(result)
         
             # 如果缓存数据库中的使用次数已经小于等于0了,并且用户是 UnlimitedTime_LimitedRequest,返回
             if userinfo_redis['userinfo']['customer_type'] == 'UnlimitedTime_LimitedRequest' and int(userinfo_redis['userinfo']['api_request_left'])<=0:
-                voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/norquestquota.wav'
+                voice_url = voice_url_base + 'voice/norquestquota.wav'
                 result = {'code':200,'message':'对不起，您的次数已经用完, 或者请找老朱哦',"voice":voice_url}
                 return JsonResponse(result)
             
             # 如果缓存数据库中的令牌和用户令牌不一致，告知您的令牌已经更新，请输入正确的令牌
             if not inputmessage:
-                voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/nomessage.wav'
+                voice_url =voice_url_base + 'voice/nomessage.wav'
                 result = {'code':200,'message':'你怎么不说话呢',"voice":voice_url}
                 return JsonResponse(result)
 
@@ -64,13 +72,13 @@ def check_jwt(fn):
         # 令牌过期客户,# jwt 解密拿到信息,如果时间过期自动抛出ExpiredSignatureError，如果解码失败就到解码失败的错误中
         except jwt.exceptions.ExpiredSignatureError as e:
             
-            voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/token_expired.wav'
+            voice_url = voice_url_base + 'voice/token_expired.wav'
             result = {'code':200,'message':'您的令牌已经过期了,请找老朱续费哦',"voice":voice_url}
             return JsonResponse(result)
 
         # 令牌解码失败,令牌解码失败
         except Exception as e:
-            voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/token_wrong.wav'
+            voice_url = voice_url_base + 'voice/token_wrong.wav'
             result = {'code':200,'message':'您的令牌不正确,请输入正确的令牌',"voice":voice_url}
             print(traceback.format_exc())
             return JsonResponse(result)
