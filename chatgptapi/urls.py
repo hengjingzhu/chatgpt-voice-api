@@ -20,9 +20,8 @@ from chatgptapi.views import IndexView
 favicon_view = RedirectView.as_view(url='/static/image/favicon.ico', permanent=True)
 
 urlpatterns = [
+    #path('',IndexView.as_view()),
     path('admin/', admin.site.urls),
     path('chatgptapi/',include('chatgptapiv1.urls')),
     path('favicon.ico', favicon_view),
-    path('',IndexView.as_view())
-
 ]
