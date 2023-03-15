@@ -114,7 +114,10 @@ class ShortVoiceContent(View):
     
             else:
                 response_message = '你要说话，才能生成随机角色啊'
-                voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
+                # 生产环境
+                voice_url = settings.NGINX_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
+                # 开发环境
+                #voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
                 result = {'code':200,'message':'你要说话，才能生成随机角色啊',"voice":voice_url}
                 return JsonResponse(result)
 
