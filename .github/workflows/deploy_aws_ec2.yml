@@ -108,6 +108,7 @@ jobs:
         # 删除原来的挂载的 static的文件夹，重新建立 rm -f /opt/djangotest2/djangostatic/* mkdir /opt/djangotest2/djangostatic
         # 使用 /opt/djangotest2/docker-compose.yaml 启动新的镜像服务
         # 使用 /opt/djangotest2/docker-compose.yaml 启动新的镜像服务
+        # 注意新版本中 使用 docker compose 代替了 docker-compose
         SCRIPT_AFTER: |
           
 
@@ -117,9 +118,9 @@ jobs:
           
           sed -i "s|image:.*|image: registry.${{ env.REGION }}.aliyuncs.com/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}|" /opt/DjangoChatGPTAPI/docker-compose.yml
           
-          docker-compose -f /opt/DjangoChatGPTAPI/docker-compose.yml down
+          docker compose -f /opt/DjangoChatGPTAPI/docker-compose.yml down
           
           
           docker image prune -f --filter "dangling=true"
           rm -f /opt/DjangoChatGPTAPI/djangostatic/*
-          docker-compose -f /opt/DjangoChatGPTAPI/docker-compose.yml up -d
+          docker compose -f /opt/DjangoChatGPTAPI/docker-compose.yml up -d

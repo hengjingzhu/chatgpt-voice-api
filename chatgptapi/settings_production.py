@@ -84,7 +84,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRESQL_INTERNAL_DBNAME'),
         'USER': os.environ.get('POSTGRESQL_INTERNAL_USERNAME'),
         'PASSWORD': os.environ.get('POSTGRESQL_INTERNAL_PASSWORD'),
-        'HOST': os.environ.get('AWS_EC2_INERNAL_HOST'),
+        'HOST': os.environ.get('AWS_EC2_EXTERNAL_HOST'),
         'PORT': os.environ.get('POSTGRESQL_INTERNAL_PORT'),
         'client_encoding':'UTF8',
         'default_transaction_isolation':'read committed',
