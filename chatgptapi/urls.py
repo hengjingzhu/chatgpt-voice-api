@@ -16,7 +16,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.views.generic.base import RedirectView
-from chatgptapi.views import IndexView
+#from chatgptapi.views import IndexView
 favicon_view = RedirectView.as_view(url='/static/image/favicon.ico', permanent=True)
 
 urlpatterns = [
