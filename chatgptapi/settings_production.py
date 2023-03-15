@@ -84,7 +84,7 @@ DATABASES = {
         'NAME': os.environ.get('POSTGRESQL_INTERNAL_DBNAME'),
         'USER': os.environ.get('POSTGRESQL_INTERNAL_USERNAME'),
         'PASSWORD': os.environ.get('POSTGRESQL_INTERNAL_PASSWORD'),
-        'HOST': os.environ.get('POSTGRESQL_INTERNAL_HOST'),
+        'HOST': os.environ.get('AWS_EC2_INERNAL_HOST'),
         'PORT': os.environ.get('POSTGRESQL_INTERNAL_PORT'),
         'client_encoding':'UTF8',
         'default_transaction_isolation':'read committed',
@@ -97,7 +97,7 @@ DATABASES = {
 CACHES = {
     "default": {
                 "BACKEND": "django_redis.cache.RedisCache",
-                "LOCATION": "redis://{}/1".format(os.environ.get('REDIS_INTERNAL_HOST')),		#数字代表使用redis哪个数据库
+                "LOCATION": "redis://{}/1".format(os.environ.get('AWS_EC2_INERNAL_HOST')),		#数字代表使用redis哪个数据库
                             "OPTIONS": 
                             {
                                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -107,7 +107,7 @@ CACHES = {
 
     "ali_voice_token": {
                 "BACKEND": "django_redis.cache.RedisCache",
-                "LOCATION": "redis://{}/2".format(os.environ.get('REDIS_INTERNAL_HOST')),		#数字代表使用redis哪个数据库
+                "LOCATION": "redis://{}/2".format(os.environ.get('AWS_EC2_INERNAL_HOST')),		#数字代表使用redis哪个数据库
                             "OPTIONS": 
                             {
                                 "CLIENT_CLASS": "django_redis.client.DefaultClient",
@@ -210,7 +210,7 @@ STATIC_ROOT = '/djangostatic'
 
 
 # 当前主机ip
-MY_HOST_NAME = "http://{}:8000".format(os.environ.get('ALI_ECS_EXTERNAL_IP'))
+MY_HOST_NAME = "http://{}:8000".format(os.environ.get('AWS_EC2_EXTERNAL_HOST'))
 
 # jwt token key 
 JWT_TOKEN_KEY = os.environ.get('JWT_TOKEN_KEY')

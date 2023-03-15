@@ -12,9 +12,9 @@ env:
   IMAGE_NAME: davidzhu/django-chatgpt-api  # 镜像名，阿里云的镜像仓库命名规则
   IMAGE_TAG: v0.1.0                       # 镜像的版本号，   
   REGION: cn-shanghai                     # 阿里云镜像地址   
-  ACCESS_KEY_ID: ${{ secrets.ALIYUN_ECS_ACCESS_KEY }}      # 登陆阿里云ecs 服务器 id ，可以是 root,放在 secrets中
-  ACCESS_KEY_SECRET: ${{ secrets.ALIYUN_ECS_SECRET_KEY }}   # 登陆阿里云 ecs 服务器 私钥，放在 secrets 中
-  ECS_CLUSTER_ID:  ${{ secrets.ALI_ECS_EXTERNAL_IP }}                       # 阿里云服务器地址
+  ACCESS_KEY_ID: ${{ secrets.AWS_EC2_ACCESS_KEY }}      # 登陆ecs 服务器 id ，可以是 root,放在 secrets中
+  ACCESS_KEY_SECRET: ${{ secrets.AWS_EC2_SECRET_KEY }}   # 登陆 ecs 服务器 私钥，放在 secrets 中
+  ECS_CLUSTER_ID:  ${{ secrets.AWS_EC2_EXTERNAL_HOST }}                       # 服务器地址
 
 jobs:
   deploy:
@@ -70,7 +70,10 @@ jobs:
             ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS=${{ secrets.ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS }}
             ALIYUN_ACCESS_ID=${{ secrets.ALIYUN_ACCESS_ID }}
             ALIYUN_ACCESSKEY_SECRET=${{ secrets.ALIYUN_ACCESSKEY_SECRET }}
-
+            AWS_EC2_EXTERNAL_HOST=${{ secrets.AWS_EC2_EXTERNAL_HOST }}
+            AWS_EC2_INERNAL_HOST=${{ secrets.AWS_EC2_INERNAL_HOST }}
+            AWS_EC2_ACCESS_KEY=${{ secrets.AWS_EC2_ACCESS_KEY }}
+            AWS_EC2_SECRET_KEY=${{ secrets.AWS_EC2_SECRET_KEY }}
 
       env:
         DOCKER_USERNAME: ${{ secrets.ALIYUN_CONTAINER_REGISTRY_USERNAME }}
