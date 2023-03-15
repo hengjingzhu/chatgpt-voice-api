@@ -18,7 +18,7 @@ MODEL_TOP_P = 1
 #frequency_penalty 是一个大于等于0的实数，它用于惩罚生成文本中高频词语的出现。当 frequency_penalty 值越大时，生成的文本中重复的词语会更少，从而增加文本的多样性。
 #presence_penalty 是一个大于等于0的实数，它用于惩罚生成文本中没有出现过的词语。当 presence_penalty 值越大时，生成的文本会更加准确，但也会限制生成的多样性。
 #这两个参数通常需要根据具体的应用场景来调整。例如，在需要生成创新性的文本时，可以增加 frequency_penalty 的值以增加文本的多样性；在需要生成准确的技术文档时，可以增加 presence_penalty 的值以减少错误和不准确的信息
-FREQUENCY_PENALTY = 10
+FREQUENCY_PENALTY = 1
 PRESENCE_PENALTY = 0.6
 
 # set max_token_inmessage, long conversation

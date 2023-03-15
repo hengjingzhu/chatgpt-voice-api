@@ -15,10 +15,10 @@ def check_jwt(fn):
         received_message_dict = json.loads(request.body)
         
 
-        # 不启动 nginx 配置
+        # 开发环境不启动 nginx 配置
         #voice_url_base = settings.MY_HOST_NAME+settings.STATIC_URL
 
-        # 启动 nginx 的时候配置
+        #生产环境 启动 nginx 的时候配置
         voice_url_base = settings.NGINX_HOST_NAME+settings.STATIC_URL
         
 

@@ -26,7 +26,7 @@ from chatgptapiv1.models import RoleVoiceAttribution,BlackBox
 def GetVoiceUrl_tts(response_message_chatgpt,username,RoleVoiceAttribution_this_dialog):
     print(RoleVoiceAttribution_this_dialog)
 
-    #response_message_chatgpt = response_message_chatgpt.replace('\n', '')    
+    response_message_chatgpt = response_message_chatgpt.replace('\n', '')    
     system_role_alivoice_role = RoleVoiceAttribution_this_dialog['system_role_alivoice_role']
     system_role_alivoice_samplerate = RoleVoiceAttribution_this_dialog['system_role_alivoice_samplerate']
     system_role_alivoice_speechrate = int(RoleVoiceAttribution_this_dialog['system_role_alivoice_speechrate'])
