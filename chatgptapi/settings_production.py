@@ -211,6 +211,8 @@ STATIC_ROOT = '/djangostatic'
 
 # 当前主机ip
 MY_HOST_NAME = "http://{}:8000".format(os.environ.get('AWS_EC2_EXTERNAL_HOST'))
+NGINX_HOST_NAME = "http://{}".format(os.environ.get('AWS_EC2_EXTERNAL_HOST'))
+
 
 # jwt token key 
 JWT_TOKEN_KEY = os.environ.get('JWT_TOKEN_KEY')

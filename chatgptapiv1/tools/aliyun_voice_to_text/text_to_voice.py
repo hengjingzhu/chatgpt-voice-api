@@ -129,7 +129,10 @@ class TextToVoice():
                     f.write(voice_binary_data)
 
                 # 返回一个包含音频文件URL链接的响应
-                audio_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/{}.wav'.format(self.username)
+                #audio_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/{}.wav'.format(self.username)
+                # 配置nginx后的返回路由，nginx监听的是本机80版本
+                audio_url = settings.NGINX_HOST_NAME+settings.STATIC_URL + 'voice/{}.wav'.format(self.username)
+
                 print(audio_url,'本次产生的音频地址')
                 #audio_url = 'http://192.168.31.188:8000/static/voice/test1.wav'
                 return audio_url
