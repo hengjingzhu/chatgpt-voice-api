@@ -210,8 +210,8 @@ STATIC_ROOT = '/djangostatic'
 
 
 # 当前主机ip
-MY_HOST_NAME = "https://{}:8000".format(os.environ.get('AWS_EC2_EXTERNAL_HOST'))
-NGINX_HOST_NAME = "https://{}".format(os.environ.get('AWS_EC2_EXTERNAL_HOST'))
+MY_HOST_NAME = "https://{}:8000".format(os.environ.get('GPT_DOMAIN_NAME'))
+NGINX_HOST_NAME = "https://{}".format(os.environ.get('GPT_DOMAIN_NAME'))
 
 
 # jwt token key 
