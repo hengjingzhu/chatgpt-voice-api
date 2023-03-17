@@ -18,7 +18,7 @@ class PickSystemRole():
         if self.userinfo['is_superuser']:
             RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.all()
         elif not self.userinfo['is_superuser']:
-            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=self.userinfo['id']))
+            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=self.userinfo['id']) | Q(creator_id=self.userinfo['creator']))
 
         datalist = json.loads(serializers.serialize('json', RoleVoiceAttribution_queryset, fields=('system_role','system_role_random_weight')))
         return datalist
