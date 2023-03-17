@@ -297,9 +297,9 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
         # 如果 creator 是 admin,那就说明这个不是其他角色创建的，登录名就是创建名
         # 如果 creator 不是 admin,那就说明这个角色是其他人创建的，不要修改.因为数据库默认创建就是 admin
         if obj.creator.username == 'admin':
-            obj.creator = request.user
-        else:
             pass
+        else:
+            obj.creator = request.user
 
         super().save_model(request, obj, frontend_formdata, change)
 
