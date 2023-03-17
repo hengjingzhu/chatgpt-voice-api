@@ -119,7 +119,7 @@ class TextToVoice():
             # cache_result=cache.set('voice_binary_data',voice_binary_data,60*60)
             if voice_binary_data:
                 # 将音频数据保存到服务器上的一个静态文件中,dev 环境中 STATIC_ROOT 包括了voice,所以这里不用写
-                # 好痒
+                
                 # 生产环境
                 file_path = os.path.join(settings.STATIC_ROOT, 'voice/{}.wav'.format(self.username))
                 
@@ -138,16 +138,7 @@ class TextToVoice():
                 #audio_url = 'http://192.168.31.188:8000/static/voice/test1.wav'
                 return audio_url
             
-            # if cache_result:
-                
-            #     print('制作短音频',cache_result)
-
-            #     local_short_voice_url = reverse('django_short_voice_url')
-            #     # 返回视频链接
-            #     voice_url = settings.MY_HOST_NAME+local_short_voice_url
-            #     return voice_url
-            # else:
-            #     return self.run_short()
+            
             
             
 

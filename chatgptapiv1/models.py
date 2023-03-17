@@ -175,13 +175,14 @@ class RoleVoiceAttribution(models.Model):
                                                         validators=[
                                                             MinValueValidator(-500, message='Value must be greater than or equal to -500'),
                                                             MaxValueValidator(500, message='Value must be less than or equal to 500')
-                                                        ])
+                                                        ],help_text="-500到500"
+                                                        )
     
     system_role_alivoice_pitchrate = models.IntegerField("语调",default=0,
                                                         validators=[
                                                             MinValueValidator(-500, message='Value must be greater than or equal to -500'),
                                                             MaxValueValidator(500, message='Value must be less than or equal to 500')
-                                                        ])
+                                                        ],help_text="-500到500")
     
     # speak 标签音效效果<speak effect="lolita">我是男声。</speak>
     system_role_aivoice_speak_effect = models.CharField("角色音效",blank=True,max_length=255,choices=ALIYUN_VOICE_SPEAK_EFFECT)
@@ -198,7 +199,7 @@ class RoleVoiceAttribution(models.Model):
                                                         )
 
 
-    creator = models.ForeignKey('Userinfo', verbose_name="角色创建者",on_delete=models.SET_DEFAULT, null=True, blank=True,default=1)
+    creator = models.ForeignKey('Userinfo', verbose_name="角色创建者",on_delete=models.CASCADE, null=True, blank=True,default=1)
     shart_with_subadmin = models.BooleanField(verbose_name="公共角色",default=False,help_text="勾选后，其他管理员可以看到这个角色")
 
     created_time = models.DateTimeField('创建时间',auto_now_add=True)
@@ -218,8 +219,8 @@ class RoleVoiceAttribution(models.Model):
 # Historydialog
 class BlackBox(models.Model):
     
-    user = models.ForeignKey('UserInfo',verbose_name="用户名",on_delete=models.SET_DEFAULT,default='此用户已被删除')
-    RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',verbose_name="角色属性",on_delete=models.SET_DEFAULT,default='角色已被删除')
+    user = models.ForeignKey('UserInfo',verbose_name="用户名",on_delete=models.CASCADE,default=1)
+    RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',verbose_name="角色属性",on_delete=models.CASCADE,default=1)
 
     diolog = models.JSONField('HistoryDialog',null=True,blank=True)
 

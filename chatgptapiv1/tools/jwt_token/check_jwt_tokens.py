@@ -20,12 +20,11 @@ def check_jwt(fn):
 
         #生产环境 启动 nginx 的时候配置
         voice_url_base = settings.NGINX_HOST_NAME+settings.STATIC_URL
-        
 
         try:
             inputmessage = received_message_dict['inputmessage'].strip()
             jwt_token = received_message_dict['authorization'].strip()
-
+            
             # jwt 解密拿到信息
             userinfo_jwttoken = jwt.decode(jwt=jwt_token,key=settings.JWT_TOKEN_KEY,algorithms=['HS256'])
             #print(inputmessage,userinfo_jwttoken,type(userinfo_jwttoken))
