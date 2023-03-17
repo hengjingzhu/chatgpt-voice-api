@@ -61,7 +61,7 @@ class OpenAIModel():
     #    "role": "assistant"
     #  }
     # return response.choices[0].message
-    print('GPT返回的信息',response,type(response))
+    #print('GPT返回的信息',response,type(response))
     return response
 
   def reply_message(self,inputmessage,start_messages,system_role_description='you are an helpful ai'):

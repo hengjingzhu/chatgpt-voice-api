@@ -23,7 +23,7 @@ class UserInfo(AbstractUser):
     # 无限制用户就填写 'unlimited'
     api_request_left = models.CharField("ChatGPT剩余次数",default=20,max_length=255,blank=True,null=True)
 
-    max_tokens = models.PositiveIntegerField("ChatGPT长对话最大token数",default=1200, validators=[
+    max_tokens = models.PositiveIntegerField("ChatGPT保持长对话最大token数",default=1200, validators=[
                                                             MinValueValidator(1, message='Value must be greater than or equal to 1'),
                                                             MaxValueValidator(4096,message='Value must be less than or equal to 4096')
                                                         ],help_text="最大不超过4096")
@@ -36,7 +36,7 @@ class UserInfo(AbstractUser):
     updated_time = models.DateTimeField('更新时间',auto_now=True)
     is_active = models.BooleanField('是否活跃',default=True)
 
-    creator = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True,default=1)
+    creator = models.ForeignKey('self', verbose_name="用户创建者",on_delete=models.CASCADE, null=True, blank=True,default=1)
 
     # def __str__(self):
     #     return self.username
@@ -163,6 +163,11 @@ class RoleVoiceAttribution(models.Model):
                                                             MaxValueValidator(2.0, message='Value must be less than or equal to 2.0')
                                                         ],help_text='Number between -2.0 and 2.0.当 presence_penalty 值越大时，生成的文本会更加准确，但也会限制生成的多样性')
     
+    chatgpt_max_reponse_tokens = models.PositiveIntegerField("ChatGPT单次回复最大token",default=400, validators=[
+                                                                MinValueValidator(1, message='Value must be greater than or equal to 1'),
+                                                                MaxValueValidator(3000,message='Value must be less than or equal to 3000')
+                                                            ],help_text="不要太大")
+
     system_role_alivoice_role = models.CharField("角色配音",blank=False,default='zhimiao_emo',max_length=255,choices=ALIYUN_VOICE_ROLE)
     system_role_alivoice_samplerate = models.IntegerField("音频采样率",default=16000,choices=ALIYUN_VOICE_SAMPLE_RATE)
 
@@ -193,6 +198,9 @@ class RoleVoiceAttribution(models.Model):
                                                         )
 
 
+    creator = models.ForeignKey('Userinfo', verbose_name="角色创建者",on_delete=models.SET_DEFAULT, null=True, blank=True,default=1)
+    shart_with_subadmin = models.BooleanField(verbose_name="公共角色",default=False,help_text="勾选后，其他管理员可以看到这个角色")
+
     created_time = models.DateTimeField('创建时间',auto_now_add=True)
     updated_time = models.DateTimeField('更新时间',auto_now=True)
     is_active = models.BooleanField('是否活跃',default=True)
@@ -210,8 +218,8 @@ class RoleVoiceAttribution(models.Model):
 # Historydialog
 class BlackBox(models.Model):
     
-    user = models.ForeignKey('UserInfo',on_delete=models.DO_NOTHING)
-    RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',on_delete=models.DO_NOTHING)
+    user = models.ForeignKey('UserInfo',verbose_name="用户名",on_delete=models.DO_NOTHING)
+    RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',verbose_name="角色属性",on_delete=models.DO_NOTHING)
 
     diolog = models.JSONField('HistoryDialog',null=True,blank=True)
 

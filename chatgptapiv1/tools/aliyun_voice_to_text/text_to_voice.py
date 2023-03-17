@@ -10,7 +10,7 @@ import os
 
 class TextToVoice():
 
-    def __init__(self,message,username='myaudio',role='zhimiao_emo',sample_rate=16000,speech_rate=-100,pitch_rate=0) -> None:
+    def __init__(self,message,username='myaudio',role='zhimiao_emo',sample_rate=16000,speech_rate=-100,pitch_rate=0,rawmessage='你好啊') -> None:
         
         self.retry_time = 0
         self.max_retry = 10
@@ -26,6 +26,7 @@ class TextToVoice():
         self.speech_rate = speech_rate
         self.pitch_rate = pitch_rate
 
+        self.rawmessage = rawmessage
         self.payload={
             "payload":{
                 "tts_request":{
@@ -155,7 +156,7 @@ class TextToVoice():
     # 如果 message 长度超过300就同长文本,低于300就用短文本, 返回 voice url, 都是一个链接地址
     def run(self):
 
-        if len(self.message)<=300:
+        if len(self.rawmessage)<=300:
             voice_url = self.run_short()
 
         else:

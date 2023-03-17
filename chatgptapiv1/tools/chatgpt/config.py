@@ -9,7 +9,7 @@ ORG_ID = settings.OPENAI_ORG_ID
 #OPENAIMODELNAME = "text-davinci-003"
 OPEN_AI_MODEL_NAME = "gpt-3.5-turbo"
 # max token in one response
-MAX_TOKEN_RESPONSE = 2000
+MAX_TOKEN_RESPONSE = 2500
 # chatgpt temperature 
 MODEL_TEMPERATURE = 0.8
 # chatgpt top_p

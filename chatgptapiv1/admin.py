@@ -10,6 +10,8 @@ from django.forms.models import model_to_dict
 from django.db import models
 from django.forms import Textarea
 from django.db.models import Q
+from django.contrib.admin import SimpleListFilter
+
 
 # 我在左上角
 admin.site.site_header = '智慧语音管理平台'
@@ -36,7 +38,7 @@ class UserInfoAdmin(UserAdmin):
  
         (gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
  
-        (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined')}),
+        (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
     )
 
 
@@ -107,7 +109,7 @@ class UserInfoAdmin(UserAdmin):
             
             # 把 obj 转换成字典传输进去
             # {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True}
-            userinfo_dict = model_to_dict(obj, fields=['id','username', 'jwt_token','customer_type','token_expired_time','api_request_left','max_tokens','status','is_active'])
+            userinfo_dict = model_to_dict(obj, fields=['id','username', 'jwt_token','customer_type','token_expired_time','api_request_left','max_tokens','status','is_active','creator','is_superuser'])
             
             #print('admin中存储前 userinfo_dict',userinfo_dict)
             for i in range(0,10):
@@ -208,12 +210,76 @@ class UserInfoAdmin(UserAdmin):
 
 
 
+# 自定义 user 过滤器，超级用户看到所有，其他用户只能看到自己和自己创建的用户
+class CustomUserFilter(SimpleListFilter):
+    title = '用户'
+    parameter_name = 'user'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each tuple is the coded
+        value for the option that will appear in the URL query. The second
+        element is the human-readable name for the option that will appear in
+        the right sidebar.
+        """
+        if request.user.is_superuser:
+            qs = UserInfo.objects.all()
+        elif not request.user.is_superuser:
+            qs = UserInfo.objects.filter(Q(username=request.user) | ~Q(is_superuser=True) & ~Q(groups__name='sub-admin') &Q(creator=request.user))
+
+        return qs.values_list('id', 'username')
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value provided in the
+        query string and retrievable via `self.value()`.
+        """
+        value = self.value()
+
+        if value:
+            return queryset.filter(user_id=value)
+        return queryset
+
+
+# 自定义 user 过滤器，超级用户看到所有，其他用户只能看到自己和自己创建的用户
+class CustomRoleVoiceAttributionFilter(SimpleListFilter):
+    title = '角色属性'
+    parameter_name = 'RoleVoiceAttribution'
+
+    def lookups(self, request, model_admin):
+        """
+        Returns a list of tuples. The first element in each tuple is the coded
+        value for the option that will appear in the URL query. The second
+        element is the human-readable name for the option that will appear in
+        the right sidebar.
+        """
+        if request.user.is_superuser:
+            qs = RoleVoiceAttribution.objects.all()
+        elif not request.user.is_superuser:
+            qs = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator=request.user))
+
+        return qs.values_list('id','system_role')
+
+    def queryset(self, request, queryset):
+        """
+        Returns the filtered queryset based on the value provided in the
+        query string and retrievable via `self.value()`.
+        """
+        value = self.value()
+
+        if value:
+            return queryset.filter(RoleVoiceAttribution_id=value)
+        return queryset
+
+
+
 # 角色声音属性表
 @admin.register(RoleVoiceAttribution)
 class RoleVoiceAttributionAdmin(admin.ModelAdmin):
-    list_display = ('system_role','system_role_random_weight','system_role_alivoice_role','is_active')
+    list_display = ('system_role','system_role_random_weight','system_role_alivoice_role','shart_with_subadmin','creator','is_active')
     list_per_page = 30
     list_editable =('system_role_random_weight',)
+    readonly_fields = ('creator',)
 
     def save_model(self, request, obj, form, change):
         
@@ -228,8 +294,84 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
             obj.system_role_alivoice_speak_emotion = None
             obj.system_role_alivoice_speak_intensity = None
         
+        # 如果 creator 是 admin,那就说明这个不是其他角色创建的，登录名就是创建名
+        # 如果 creator 不是 admin,那就说明这个角色是其他人创建的，不要修改.因为数据库默认创建就是 admin
+        if obj.creator.username == 'admin':
+            obj.creator = request.user
+        else:
+            pass
 
         super().save_model(request, obj, frontend_formdata, change)
+
+
+    # superuser 权限返回所有，其他用户只能返回 superuser创建的角色以及自己创建的角色
+    def get_queryset(self, request):
+
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            self.list_editable =('system_role_random_weight',)
+            self.readonly_fields = ('creator',)
+            return qs
+
+        # 其他后台管理人员登陆只能看到公共角色，或者是自己创建的角色
+        return qs.filter(Q(shart_with_subadmin=True) | Q(creator=request.user))
+
+
+    def delete_model(self,request, obj):
+
+        # 如果是超级用户可以删除
+        if request.user.is_superuser:
+            obj.delete()
+
+        # 如果不是superuser的话,删除的obj创建者是自己的话，可以删除
+        elif not request.user.is_superuser and obj.creator == request.user:
+            obj.delete()
+
+        # 如果不是删除，删除的obj不是自己的话，删除不了
+        elif not request.user.is_superuser and not obj.creator == request.user:
+            pass
+
+    def delete_queryset(self,request, queryset):
+        # 如果是超级用户可以删除
+        if request.user.is_superuser:
+            queryset.delete()
+        
+        # 如果不是superuser的话,只能删除自己创建的角色
+        elif not request.user.is_superuser:
+
+            for obj in queryset:
+                if obj.creator == request.user:
+                    obj.delete()
+                elif obj.creator != request.user:
+                    pass
+
+
+    # 管理员返回所有，其他管理员只能看到部分字段
+    def change_view(self, request, object_id, form_url='', extra_context=None):
+        
+        if request.user.is_superuser:
+            self.readonly_fields = ('creator',)
+            
+        elif not request.user.is_superuser:
+            self.readonly_fields = ('creator','shart_with_subadmin')
+        
+        return super().change_view(
+            request, object_id, form_url, extra_context=extra_context,
+        )
+    
+    # 管理员返回所有，其他管理员只能看到部分字段
+    def add_view(self, request, form_url='', extra_context=None):
+
+        if request.user.is_superuser:
+           self.readonly_fields = ('creator',)
+        else:
+            self.readonly_fields = ('creator','shart_with_subadmin')
+        
+        return super().add_view(
+            request, form_url, extra_context=extra_context,
+        )
+
+
 
 
 
@@ -238,7 +380,7 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
 class BlackBoxAdmin(admin.ModelAdmin):
     list_display = ('user','RoleVoiceAttribution','get_creator','updated_time')
     list_per_page = 30
-    list_filter = ('user', 'RoleVoiceAttribution')
+    list_filter = (CustomRoleVoiceAttributionFilter,CustomUserFilter)
     search_fields = ['user__username']
 
     readonly_fields = ['user','RoleVoiceAttribution','updated_time','created_time']
@@ -250,7 +392,7 @@ class BlackBoxAdmin(admin.ModelAdmin):
     # 增加一个自定义字段
     def get_creator(self, obj):
         return obj.user.creator
-    get_creator.short_description = 'creator'
+    get_creator.short_description = '用户创建者'
     get_creator.admin_order_field = 'user__creator'
 
     # superuser 权限返回所有，其他用户返回非superuser 用户

@@ -51,7 +51,15 @@ def GetVoiceUrl_tts(response_message_chatgpt,username,RoleVoiceAttribution_this_
             voice_text_message = f'<speak>{response_message_chatgpt}</speak>'
 
     print(voice_text_message,username,system_role_alivoice_role,system_role_alivoice_samplerate,system_role_alivoice_speechrate,type(system_role_alivoice_pitchrate))
-    voice_url = TextToVoice(message=voice_text_message,username=username,role=system_role_alivoice_role,sample_rate=system_role_alivoice_samplerate,speech_rate=system_role_alivoice_speechrate,pitch_rate=system_role_alivoice_pitchrate).run()
+    voice_url = TextToVoice(
+        message=voice_text_message,
+        username=username,
+        role=system_role_alivoice_role,
+        sample_rate=system_role_alivoice_samplerate,
+        speech_rate=system_role_alivoice_speechrate,
+        pitch_rate=system_role_alivoice_pitchrate,
+        rawmessage=response_message_chatgpt
+        ).run()
     return voice_url
     
 
@@ -72,10 +80,10 @@ class ShortVoiceContent(View):
         return HttpResponse(audio_url)
 
 
-    # {'existed_userinfo_redis': {'userinfo': {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True}, 'blackbox': [], 'RoleVoiceAttribution': ''}, 'inputmessage': '测试消息'}
+    # {'existed_userinfo_redis': {'userinfo': {'id': 3,','username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True,'creator':'','is_superuser':False,'is_superuser':True,'creator':1}, 'blackbox': [], 'RoleVoiceAttribution': ''}, 'inputmessage': '测试消息'}
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
-        # {'userinfo': {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True},'blackbox': [], 'RoleVoiceAttribution': ''}
+        # {'userinfo': {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True,'is_superuser':True,'creator':1'},'blackbox': [], 'RoleVoiceAttribution': ''}
         # 这也是存在redis数据库中的数据格式
         existed_userinfo_redis = kwargs['existed_userinfo_redis']['userinfo']
 
@@ -90,7 +98,7 @@ class ShortVoiceContent(View):
     
         inputmessage = kwargs['inputmessage']
 
-        print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
+        #print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
 
         # 如果 inputmessage 是'重置角色'，或者'角色重置'，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #  # 重置角色,会原有对话保存到og中，清空redis数据
@@ -100,7 +108,6 @@ class ShortVoiceContent(View):
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
             if history_messages and RoleVoiceAttribution_this_dialog:
                 
-                    
                 response_message = "你居然不要我了,你将会被分配一个随机角色"
                 print(response_message,'重置角色')
                 voice_url = GetVoiceUrl_tts(response_message,username,RoleVoiceAttribution_this_dialog)
@@ -124,7 +131,7 @@ class ShortVoiceContent(View):
         # 如果没有历史对话记录，和对话属性,那就是新的对话，要先 random选择 一个角色.
         if not history_messages and not RoleVoiceAttribution_this_dialog:
 
-            system_role = PickSystemRole().pick_random_role()
+            system_role = PickSystemRole(userinfo=existed_userinfo_redis).pick_random_role()
             print('新对话随机到的角色:',system_role)
             # 获取这个角色的obj
             RoleVoiceAttributionObj = RoleVoiceAttribution.objects.get(system_role=system_role)
@@ -135,10 +142,21 @@ class ShortVoiceContent(View):
             history_messages = []
 
         # 如果有历史会话记录和对话属性，那就不再改变,把数据和参数发给 chatgpt,获得回复消息.
+        # RoleVoiceAttribution_this_dialog : {'id': 21, 'system_role': 'general2-admin2', 'system_role_description': 'you are a helpful ai', 'system_role_random_weight': 100, 'chatgpt_model_temperature': Decimal('0.80'), 'chatgpt_model_p': Decimal('1.00'), 'chatgpt_frequency_penalty': Decimal('1.00'), 'chatgpt_presence_penalty': Decimal('0.60'), 'chatgpt_max_reponse_tokens': 400, 'system_role_alivoice_role': 'zhimiao_emo', 'system_role_alivoice_samplerate': 16000, 'system_role_alivoice_speechrate': 0, 'system_role_alivoice_pitchrate': 0, 'system_role_aivoice_speak_effect': '', 'system_role_alivoice_speak_emotion': 'gentle', 'system_role_alivoice_speak_intensity': Decimal('1.00'), 'creator': 3, 'shart_with_subadmin': False}
+        print("在调取openai信息中",RoleVoiceAttribution_this_dialog)
+
+        reply_message_obj = OpenAIModel(
+                                        max_token_response = RoleVoiceAttribution_this_dialog['chatgpt_max_reponse_tokens'],
+                                        model_temperature = float(RoleVoiceAttribution_this_dialog['chatgpt_model_temperature']),
+                                        model_top_p = float(RoleVoiceAttribution_this_dialog['chatgpt_model_p']),
+                                        frequency_penalty = float(RoleVoiceAttribution_this_dialog['chatgpt_frequency_penalty']),
+                                        presence_penalty = float(RoleVoiceAttribution_this_dialog['chatgpt_presence_penalty']),
+
+                                        ).reply_message(inputmessage,history_messages,RoleVoiceAttribution_this_dialog['system_role_description'])
+
+
         # 回复结果:('你好，我叫qin。很高兴能和您聊天！', [{'role': 'system', 'content': '你会先自我介绍，你的名字叫 qin'}, {'role': 'user', 'content': '你好啊'}, {'role': 'assistant', 'content': '你好，我叫qin。很高兴能和您聊天！'}], 56)
-        print("在调取openai信息中")
-        reply_message_obj = OpenAIModel().reply_message(inputmessage,history_messages,RoleVoiceAttribution_this_dialog['system_role_description'])
-        print(reply_message_obj)
+        #print(reply_message_obj)
         response_message_chatgpt = reply_message_obj[0]
         new_messages = reply_message_obj[1]
         total_used_tokens = reply_message_obj[2]
@@ -221,65 +239,7 @@ class ChatGPTResponseMessage(View):
     # 定义 post 方法 
     def post(self,request):
        
-        received_message_dict = json.loads(request.body)
-        
-        received_message_str = received_message_dict.get('inputmessage')
-        username = received_message_dict.get('username')
-
-        existed_dialog = cache.get(username)
-        
-        # 重置角色,会清空数据库
-        if "重置角色" in received_message_str:
-            cache.delete(username)
-            response_message_chatgpt = "你居然不要我了,我会立场,你会得到一个随机角色"
-
-            # 转陈域名
-            # f'<speak><emotion category="gentle" intensity="1.0" >{response_message_chatgpt}</emotion></speak>'
-            voice_url = TextToVoice(f'<speak effect="lolita"><emotion category="angry" intensity="1.0" >{response_message_chatgpt}</emotion></speak>').run()
-            result = {'code':200,'message':response_message_chatgpt,"voice":voice_url}
-            return JsonResponse(result)
-
-
-
-
-        if existed_dialog:
-            # print("我在这里 existed_dialog")
-            existed_dialog = json.loads(existed_dialog)
-            
-            reply_message_obj = self.OpenAIObj.reply_message(received_message_str.strip(),existed_dialog,username)
-
-
-        elif not existed_dialog:
-            # print("我在这里 not existed_dialog")
-            # print(username)
-            start_messages = []
-            reply_message_obj = self.OpenAIObj.reply_message(received_message_str.strip(),start_messages,username)
-
-
-        # ('嘿！你好啊，有什么我可以帮助你的吗？', [{'role': 'system', 'content': ', 257)
-        #response_contents_chatgpt = self.OpenAIObj.reply_message(received_message_str,self.start_messages,'myself')
-        response_message_chatgpt = reply_message_obj[0]
-        new_messages = json.dumps(reply_message_obj[1])
-        total_used_tokens = reply_message_obj[2]
-        
-
-
-        # 如果小于最大 token 使用数，保存结果返回结果数据。
-        if total_used_tokens < MAX_TOKEN_INMESSAGE:
-
-            cache.set(username,new_messages)
-
-            # 如果大于等于最大 token 使用数量，删除数据库的对话信息
-        else:
-            cache.delete(username)
-            #response_message_chatgpt = response_message_chatgpt+"\n===========================================\n本次对话已经超过最大长度,后台数据库中的历史对话记录将会被清空,聊天属性会被随机切换"
-            response_message_chatgpt = response_message_chatgpt+"本次对话已经超过最大长度,后台数据库中的历史对话记录将会被清空,聊天属性会被随机切换"
-
-        # <speak><emotion category="gentle" intensity="1.0" >{response_message_chatgpt}</emotion></speak>
-        voice_url = TextToVoice(f'<speak><emotion category="gentle" intensity="1.0" >{response_message_chatgpt}</emotion></speak>').run()
-        print(voice_url)
-        result = {'code':200,'message':response_message_chatgpt,"voice":voice_url}
-        return JsonResponse(result)
+        pass
 
 
 class IndexView(View):
