@@ -163,7 +163,7 @@ class RoleVoiceAttribution(models.Model):
                                                             MaxValueValidator(2.0, message='Value must be less than or equal to 2.0')
                                                         ],help_text='Number between -2.0 and 2.0.当 presence_penalty 值越大时，生成的文本会更加准确，但也会限制生成的多样性')
     
-    chatgpt_max_reponse_tokens = models.PositiveIntegerField("ChatGPT单次回复最大token",default=400, validators=[
+    chatgpt_max_reponse_tokens = models.PositiveIntegerField("ChatGPT单次回复最大token",default=250, validators=[
                                                                 MinValueValidator(1, message='Value must be greater than or equal to 1'),
                                                                 MaxValueValidator(3000,message='Value must be less than or equal to 3000')
                                                             ],help_text="不要太大")
@@ -218,8 +218,8 @@ class RoleVoiceAttribution(models.Model):
 # Historydialog
 class BlackBox(models.Model):
     
-    user = models.ForeignKey('UserInfo',verbose_name="用户名",on_delete=models.DO_NOTHING)
-    RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',verbose_name="角色属性",on_delete=models.DO_NOTHING)
+    user = models.ForeignKey('UserInfo',verbose_name="用户名",on_delete=models.SET_DEFAULT,default='此用户已被删除')
+    RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',verbose_name="角色属性",on_delete=models.SET_DEFAULT,default='角色已被删除')
 
     diolog = models.JSONField('HistoryDialog',null=True,blank=True)
 
