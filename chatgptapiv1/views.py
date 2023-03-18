@@ -103,12 +103,14 @@ class ShortVoiceContent(View):
         # 如果 inputmessage 是'重置角色'，或者'角色重置'，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #  # 重置角色,会原有对话保存到og中，清空redis数据
         #print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
-        if "重置角色" in inputmessage or "角色重置" in inputmessage:
+        if "重置角色" in inputmessage or "角色重置" in inputmessage or "reset the role" in inputmessage or "reset role" in inputmessage or "role reset" in inputmessage:
             #print(RoleVoiceAttribution_this_dialog,'重置角色的属性')
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
             if history_messages and RoleVoiceAttribution_this_dialog:
                 
-                response_message = "你居然不要我了,你将会被分配一个随机角色"
+                #response_message = "你居然不要我了,你将会被分配一个随机角色"
+                response_message = "You're actually dumping me? Fine, then you will be assigned a random role."
+
                 #print(response_message,'重置角色')
                 voice_url = GetVoiceUrl_tts(response_message,username,RoleVoiceAttribution_this_dialog)
                 result = {'code':200,'message':response_message,"voice":voice_url}
