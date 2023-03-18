@@ -96,7 +96,7 @@ class ShortVoiceContent(View):
         history_messages = kwargs['existed_userinfo_redis']['blackbox']
         RoleVoiceAttribution_this_dialog = kwargs['existed_userinfo_redis']['RoleVoiceAttribution']
     
-        inputmessage = kwargs['inputmessage']
+        inputmessage = kwargs['inputmessage'].lower()
         print('此次登陆的用户',username)
         #print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
 
@@ -253,7 +253,7 @@ class ResponseTextMessageOnly(View):
         history_messages = kwargs['existed_userinfo_redis']['blackbox']
         RoleVoiceAttribution_this_dialog = kwargs['existed_userinfo_redis']['RoleVoiceAttribution']
     
-        inputmessage = kwargs['inputmessage']
+        inputmessage = kwargs['inputmessage'].lower()
         print('此次登陆的用户',username)
         #print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
 
