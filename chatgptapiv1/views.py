@@ -3,6 +3,7 @@ from django.views import View
 from django.http import JsonResponse,HttpResponse
 from django.conf import settings
 
+import traceback
 import os
 import json
 from datetime import datetime,timezone,timedelta
@@ -186,8 +187,10 @@ class ShortVoiceContent(View):
                 response_message_chatgpt = response_message_chatgpt+f'您的账号将于{token_expired_time_string}到期,可以去充值啦!'
 
                 # 存储到数据库中
-                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
-
+                try:
+                    BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
+                except Exception as e:
+                    print(traceback.format_exc())
 
         # 如果小于最大 token 使用数，保存结果到缓存数据库。
         if total_used_tokens < max_tokens_put_into_GPT_for_this_user:
@@ -204,8 +207,11 @@ class ShortVoiceContent(View):
             # 如果大于等于最大 token 使用数量,或者调用次数小于0次 ，把结果保存到pg 数据库，删除缓存数据库的对话信息
         elif total_used_tokens >= max_tokens_put_into_GPT_for_this_user:
 
-             
-            BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
+            try: 
+                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
+            except Exception as e:
+                print(traceback.format_exc())
+                
             response_message_chatgpt = response_message_chatgpt+"本次对话已经超过最大长度,后台历史对话记录将会被清空,下次聊天属性随机切换。"
 
              # 获得消息后,然后把回复消息和语音角色设置发给 TTS 模型获取语音链接
@@ -270,8 +276,13 @@ class ResponseTextMessageOnly(View):
                 #print(response_message,'重置角色')
                 #voice_url = GetVoiceUrl_tts(response_message,username,RoleVoiceAttribution_this_dialog)
                 result = {'code':200,'message':response_message,"voice":''}
-
-                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=history_messages)
+                
+                try:
+                    BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=history_messages)
+                except Exception as e:
+                    print("对话记录创建失败")
+                    print(traceback.format_exc())
+                
                 userinfo_redis = {'userinfo':existed_userinfo_redis,"blackbox":history_messages.clear(),'RoleVoiceAttribution':RoleVoiceAttribution_this_dialog.clear()}
                 cache.set(username,userinfo_redis,timeout=None)
 
@@ -342,8 +353,10 @@ class ResponseTextMessageOnly(View):
                 response_message_chatgpt = response_message_chatgpt+f'您的账号将于{token_expired_time_string}到期,可以去充值啦!'
 
                 # 存储到数据库中
-                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
-
+                try:
+                    BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
+                except Exception as e:
+                    print(traceback.format_exc())
 
         # 如果小于最大 token 使用数，保存结果到缓存数据库。
         if total_used_tokens < max_tokens_put_into_GPT_for_this_user:
@@ -360,8 +373,11 @@ class ResponseTextMessageOnly(View):
             # 如果大于等于最大 token 使用数量,或者调用次数小于0次 ，把结果保存到pg 数据库，删除缓存数据库的对话信息
         elif total_used_tokens >= max_tokens_put_into_GPT_for_this_user:
 
-             
-            BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
+            try: 
+                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
+            except Exception as e:
+                print("创建对话记录失败")
+                print(traceback.format_exc())
             response_message_chatgpt = response_message_chatgpt+"本次对话已经超过最大长度,后台历史对话记录将会被清空,下次聊天属性随机切换。"
 
              # 获得消息后,然后把回复消息和语音角色设置发给 TTS 模型获取语音链接

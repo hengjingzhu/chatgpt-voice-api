@@ -78,8 +78,10 @@ def check_jwt(fn):
         # 令牌解码失败,令牌解码失败
         except Exception as e:
             voice_url = voice_url_base + 'voice/token_wrong.wav'
-            result = {'code':200,'message':'您的令牌不正确,请输入正确的令牌',"voice":voice_url}
+            
             print(traceback.format_exc())
+            
+            result = {'code':200,'message':traceback.format_exc(),"voice":voice_url}
             return JsonResponse(result)
 
         return fn(request,*args,**kwargs)
