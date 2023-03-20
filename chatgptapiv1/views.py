@@ -104,7 +104,7 @@ class ShortVoiceContent(View):
         # 如果 inputmessage 是'重置角色'，或者'角色重置' 等口令，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
 
-        if inputmessage in settings.RESET_CHARACTER_COMMAMD:
+        if inputmessage.lower() in settings.RESET_CHARACTER_COMMAMD:
             #print(RoleVoiceAttribution_this_dialog,'重置角色的属性')
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
             if history_messages and RoleVoiceAttribution_this_dialog:
@@ -211,7 +211,7 @@ class ShortVoiceContent(View):
                 BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=new_messages)
             except Exception as e:
                 print(traceback.format_exc())
-                
+
             response_message_chatgpt = response_message_chatgpt+"本次对话已经超过最大长度,后台历史对话记录将会被清空,下次聊天属性随机切换。"
 
              # 获得消息后,然后把回复消息和语音角色设置发给 TTS 模型获取语音链接
@@ -266,7 +266,7 @@ class ResponseTextMessageOnly(View):
         # 如果 inputmessage 是'重置角色'，或者'角色重置' 等命令，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #  # 重置角色,会原有对话保存到og中，清空redis数据
         #print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
-        if inputmessage in settings.RESET_CHARACTER_COMMAMD:
+        if inputmessage.lower() in settings.RESET_CHARACTER_COMMAMD:
             #print(RoleVoiceAttribution_this_dialog,'重置角色的属性')
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
             if history_messages and RoleVoiceAttribution_this_dialog:

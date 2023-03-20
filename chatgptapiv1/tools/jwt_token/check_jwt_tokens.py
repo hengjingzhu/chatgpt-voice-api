@@ -81,7 +81,7 @@ def check_jwt(fn):
             
             print(traceback.format_exc())
             
-            result = {'code':200,'message':traceback.format_exc(),"voice":voice_url}
+            result = {'code':200,'message':'你的令牌不正确',"voice":voice_url}
             return JsonResponse(result)
 
         return fn(request,*args,**kwargs)
