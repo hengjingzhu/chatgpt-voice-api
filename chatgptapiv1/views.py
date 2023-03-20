@@ -96,14 +96,14 @@ class ShortVoiceContent(View):
         history_messages = kwargs['existed_userinfo_redis']['blackbox']
         RoleVoiceAttribution_this_dialog = kwargs['existed_userinfo_redis']['RoleVoiceAttribution']
     
-        inputmessage = kwargs['inputmessage'].lower()
+        inputmessage = kwargs['inputmessage']
         print('此次登陆的用户',username)
         #print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
 
-        # 如果 inputmessage 是'重置角色'，或者'角色重置'，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
-        #  # 重置角色,会原有对话保存到og中，清空redis数据
+        # 如果 inputmessage 是'重置角色'，或者'角色重置' 等口令，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
-        if "重置角色" in inputmessage or "角色重置" in inputmessage or "reset the role" in inputmessage or "reset role" in inputmessage or "role reset" in inputmessage:
+
+        if inputmessage in settings.RESET_CHARACTER_COMMAMD:
             #print(RoleVoiceAttribution_this_dialog,'重置角色的属性')
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
             if history_messages and RoleVoiceAttribution_this_dialog:
@@ -127,7 +127,7 @@ class ShortVoiceContent(View):
                 voice_url = settings.NGINX_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
                 # 开发环境
                 #voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
-                result = {'code':200,'message':'你要说话，才能生成随机角色啊',"voice":voice_url}
+                result = {'code':200,'message':response_message,"voice":voice_url}
                 return JsonResponse(result)
 
         # 如果没有历史对话记录，和对话属性,那就是新的对话，要先 random选择 一个角色.
@@ -253,14 +253,14 @@ class ResponseTextMessageOnly(View):
         history_messages = kwargs['existed_userinfo_redis']['blackbox']
         RoleVoiceAttribution_this_dialog = kwargs['existed_userinfo_redis']['RoleVoiceAttribution']
     
-        inputmessage = kwargs['inputmessage'].lower()
+        inputmessage = kwargs['inputmessage']
         print('此次登陆的用户',username)
         #print(existed_userinfo_redis,history_messages,RoleVoiceAttribution_this_dialog,inputmessage)
 
-        # 如果 inputmessage 是'重置角色'，或者'角色重置'，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
+        # 如果 inputmessage 是'重置角色'，或者'角色重置' 等命令，把blackbox和RoleVoiceAttribution 存储到 pg上，同时清空 该用户redis里的blackbox和RoleVoiceAttribution
         #  # 重置角色,会原有对话保存到og中，清空redis数据
         #print(inputmessage,type(history_messages),type(RoleVoiceAttribution_this_dialog))
-        if "重置角色" in inputmessage or "角色重置" in inputmessage or "reset the role" in inputmessage or "reset role" in inputmessage or "role reset" in inputmessage:
+        if inputmessage in settings.RESET_CHARACTER_COMMAMD:
             #print(RoleVoiceAttribution_this_dialog,'重置角色的属性')
             # 如果缓存数据库有历史对话记录的话，就保存到 pg 中，清空redis 对话记录
             if history_messages and RoleVoiceAttribution_this_dialog:
@@ -283,7 +283,7 @@ class ResponseTextMessageOnly(View):
                 #voice_url = settings.NGINX_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
                 # 开发环境
                 #voice_url = settings.MY_HOST_NAME+settings.STATIC_URL + 'voice/repeatresetrole.wav'
-                result = {'code':200,'message':'你要说话，才能生成随机角色啊',"voice":''}
+                result = {'code':200,'message':response_message,"voice":''}
                 return JsonResponse(result)
 
         # 如果没有历史对话记录，和对话属性,那就是新的对话，要先 random选择 一个角色.
