@@ -200,7 +200,7 @@ SIMPLEUI_DEFAULT_THEME = 'e-black-pro.css'
 SIMPLEUI_LOGO = '/static/image/adai.png'
 
 # character reset commamd
-RESET_CHARACTER_COMMAMD = ['重置角色','角色重置','reset the character','reset character','reset character']
+RESET_CHARACTER_COMMAMD = ['重置角色','角色重置','reset the character','reset character','reset your character','character reset']
 
 
 
