@@ -116,7 +116,12 @@ class ShortVoiceContent(View):
                 voice_url = GetVoiceUrl_tts(response_message,username,RoleVoiceAttribution_this_dialog)
                 result = {'code':200,'message':response_message,"voice":voice_url}
 
-                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=history_messages)
+                try:
+                    BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=RoleVoiceAttribution_this_dialog['id'],diolog=history_messages)
+                
+                except Exception as e:
+                    print(traceback.format_exc())
+                        
                 userinfo_redis = {'userinfo':existed_userinfo_redis,"blackbox":history_messages.clear(),'RoleVoiceAttribution':RoleVoiceAttribution_this_dialog.clear()}
                 cache.set(username,userinfo_redis,timeout=None)
 
