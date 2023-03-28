@@ -121,10 +121,10 @@ class TextToVoice():
                 # 将音频数据保存到服务器上的一个静态文件中,dev 环境中 STATIC_ROOT 包括了voice,所以这里不用写
                 
                 # 生产环境
-                #file_path = os.path.join(settings.STATIC_ROOT, 'voice/{}.wav'.format(self.username))
+                file_path = os.path.join(settings.STATIC_ROOT, 'voice/{}.wav'.format(self.username))
                 
                 # 开发环境
-                file_path = os.path.join(settings.STATIC_ROOT, '{}.wav'.format(self.username))
+                #file_path = os.path.join(settings.STATIC_ROOT, '{}.wav'.format(self.username))
 
                 with open(file_path, 'wb') as f:
                     f.write(voice_binary_data)
