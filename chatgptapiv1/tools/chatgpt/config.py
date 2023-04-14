@@ -11,7 +11,7 @@ OPEN_AI_MODEL_NAME = "gpt-3.5-turbo"
 # max token in one response
 MAX_TOKEN_RESPONSE = 2500
 # chatgpt temperature 
-MODEL_TEMPERATURE = 0.8
+MODEL_TEMPERATURE = 0.6
 # chatgpt top_p
 MODEL_TOP_P = 1
 

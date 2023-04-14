@@ -22,7 +22,12 @@ def check_jwt(fn):
         voice_url_base = settings.NGINX_HOST_NAME+settings.STATIC_URL
 
         try:
-            inputmessage = received_message_dict['inputmessage'].strip()
+            inputmessage = received_message_dict['inputmessage']
+            if isinstance(inputmessage, str):
+                inputmessage = inputmessage.strip()
+            elif isinstance(inputmessage, list):
+                inputmessage = inputmessage
+
             jwt_token = received_message_dict['authorization'].strip()
             
             # jwt 解密拿到信息

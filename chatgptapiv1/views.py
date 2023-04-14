@@ -9,6 +9,10 @@ import json
 from datetime import datetime,timezone,timedelta
 
 from chatgptapiv1.tools.chatgpt.openai_response_chatgpt import OpenAIModel
+from chatgptapiv1.tools.chatgpt.openai_response_chatgpt_stream import OpenAIModelStream
+
+from django.http import StreamingHttpResponse
+
 #from chatgptapiv1.tools.chatgpt.redis_connection import RedisConn
 from chatgptapiv1.tools.chatgpt.config import *
 
@@ -17,9 +21,15 @@ from chatgptapiv1.tools.jwt_token.check_jwt_tokens import check_jwt
 from chatgptapiv1.tools.randomrole.pick_system_role import PickSystemRole
 
 from django.core.cache import cache
+from django.db.models import Q
 
 from django.forms.models import model_to_dict
 from django.utils.decorators import method_decorator
+from django.core import serializers
+from django.http import StreamingHttpResponse
+
+import openai
+from chatgptapiv1.tools.chatgpt.config import *
 
 from chatgptapiv1.models import RoleVoiceAttribution,BlackBox
 
@@ -318,7 +328,7 @@ class ResponseTextMessageOnly(View):
         # 如果有历史会话记录和对话属性，那就不再改变,把数据和参数发给 chatgpt,获得回复消息.
         # RoleVoiceAttribution_this_dialog : {'id': 21, 'system_role': 'general2-admin2', 'system_role_description': 'you are a helpful ai', 'system_role_random_weight': 100, 'chatgpt_model_temperature': Decimal('0.80'), 'chatgpt_model_p': Decimal('1.00'), 'chatgpt_frequency_penalty': Decimal('1.00'), 'chatgpt_presence_penalty': Decimal('0.60'), 'chatgpt_max_reponse_tokens': 400, 'system_role_alivoice_role': 'zhimiao_emo', 'system_role_alivoice_samplerate': 16000, 'system_role_alivoice_speechrate': 0, 'system_role_alivoice_pitchrate': 0, 'system_role_aivoice_speak_effect': '', 'system_role_alivoice_speak_emotion': 'gentle', 'system_role_alivoice_speak_intensity': Decimal('1.00'), 'creator': 3, 'shart_with_subadmin': False}
         print("在调取openai信息中",RoleVoiceAttribution_this_dialog)
-        # 纯文本回复就设置回复字数限制了
+        # 纯文本回复就没置回复字数限制了
         reply_message_obj = OpenAIModel(
                                         #max_token_response = RoleVoiceAttribution_this_dialog['chatgpt_max_reponse_tokens'],
                                         model_temperature = float(RoleVoiceAttribution_this_dialog['chatgpt_model_temperature']),
@@ -405,8 +415,114 @@ class ResponseTextMessageOnly(View):
 
 
 
+
+
+# 网页聊天框
+class WebUIChat(View):
+
+    openai.organization = ORG_ID
+    openai.api_key = SECRETKEY
+
+    def get(self,request):
+        """加载页面的时候返回角色属性表，只有权重大于100的角色才会被返回
+        Args:
+            request (_type_): _description_
+        Returns:
+            render页面: 会话框页面
+        """
+        if request.user.is_superuser:
+            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.all()
+        elif not request.user.is_superuser:
+            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=request.user.id) | Q(creator_id=request.user.creator)).filter(Q(system_role_random_weight__gt=99))
+
+        rolelist = serializers.serialize('json', RoleVoiceAttribution_queryset, fields=('system_role','system_role_description','system_role_random_weight','chatgpt_model_temperature','chatgpt_model_p','chatgpt_frequency_penalty','chatgpt_presence_penalty','chatgpt_max_reponse_tokens'))
+        
+        username = request.user.username
+        userinfo_redis = cache.get(username)
+        jwt_token = userinfo_redis['userinfo']['jwt_token']
+        # print(jwt_token)
+        # print(rolelist,type(rolelist))
+
+        return render(request,'webui/index.html',locals())
+    
+    # 备用版，不知道为什么没调好
+    def generate_response_stream(self,response):
+        full_reply_content = ''
+        for chunk in response:
+            message = chunk['choices'][0]['delta'].get('content')
+            # print(message)
+            if message:
+                yield json.dumps(message)
+                full_reply_content=full_reply_content+message
+        print(full_reply_content)
+
+    @method_decorator(check_jwt)
+    def post(self,request,*args,**kwargs):
+
+        # {'userinfo': {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True,'is_superuser':True,'creator':1'},'blackbox': [], 'RoleVoiceAttribution': ''}
+        # 这也是存在redis数据库中的数据格式
+        existed_userinfo_redis = kwargs['existed_userinfo_redis']['userinfo']
+
+        max_tokens_put_into_GPT_for_this_user = existed_userinfo_redis['max_tokens']
+        username =  existed_userinfo_redis['username']
+        user_id = existed_userinfo_redis['id']
+        api_request_left = existed_userinfo_redis['api_request_left']
+        token_expired_time = existed_userinfo_redis['token_expired_time']
+
+        # history_messages = kwargs['existed_userinfo_redis']['blackbox']
+        # RoleVoiceAttribution_this_dialog = kwargs['existed_userinfo_redis']['RoleVoiceAttribution']
+    
+        inputmessage = kwargs['inputmessage']
+        print('此次登陆的用户',existed_userinfo_redis,inputmessage)
+        # 历史会话
+        history_messages = inputmessage[:-1]
+        # 本次消息
+        currentinputmessage = inputmessage[-1]['content']
+        print('inputmessage',inputmessage)
+        
+        
+        # 内置定义函数
+        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
+            full_reply_content = ''
+            for response in openai.ChatCompletion.create(
+                model = OPEN_AI_MODEL_NAME,
+                messages = inputmessage,
+                temperature = MODEL_TEMPERATURE,
+                stream = True,
+                max_tokens = MAX_TOKEN_RESPONSE,
+                top_p = MODEL_TOP_P,
+                frequency_penalty = FREQUENCY_PENALTY,
+                presence_penalty = PRESENCE_PENALTY,
+            ):
+                
+                message = response['choices'][0]['delta'].get('content')
+                # print(message)
+                if message:
+                    yield json.dumps(message)
+                   
+                    full_reply_content=full_reply_content+message
+            print(full_reply_content)
+        
+
+        # 返回数据流给前端
+        return StreamingHttpResponse(chat_stream_generator(
+                                        OPEN_AI_MODEL_NAME = OPEN_AI_MODEL_NAME,
+                                        inputmessage=inputmessage,
+                                        MODEL_TEMPERATURE=0.6,
+                                        MAX_TOKEN_RESPONSE = MAX_TOKEN_RESPONSE,
+                                        MODEL_TOP_P = MODEL_TOP_P,
+                                        FREQUENCY_PENALTY = 0.1,
+                                        PRESENCE_PENALTY = 0.1)
+                                        , 
+                                        content_type='application/json')
+
+
+# 数据分析页面
 class IndexView(View):
 
     def get(self,request):
         
         return render(request,'keynote.html',locals())
+    
+
+
