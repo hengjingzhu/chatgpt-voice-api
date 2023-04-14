@@ -124,7 +124,7 @@ class TextToVoice():
                 file_path = os.path.join(settings.STATIC_ROOT, 'voice/{}.wav'.format(self.username))
                 
                 # 开发环境
-                # file_path = os.path.join(settings.STATIC_ROOT, '{}.wav'.format(self.username))
+                #file_path = os.path.join(settings.STATIC_ROOT, '{}.wav'.format(self.username))
 
                 with open(file_path, 'wb') as f:
                     f.write(voice_binary_data)

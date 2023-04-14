@@ -231,3 +231,22 @@ ALIYUN_ACCESS_ID = os.environ.get('ALIYUN_ACCESS_ID')
 ALIYUN_ACCESSKEY_SECRET = os.environ.get('ALIYUN_ACCESSKEY_SECRET')
 # 存储在 redis 的数据库token 的key的值
 ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS = os.environ.get('ALIYUN_ACCESS_TOKEN_KEY_IN_REDIS')
+
+SIMPLEUI_CONFIG = {
+    'system_keep': True,
+    #'menu_display': ['Simpleui', '测试', '权限认证', '动态菜单测试'],      # 开启排序和过滤功能, 不填此字段为默认排序和全部显示, 空列表[] 为全部不显示.
+    'dynamic': True,    # 设置是否开启动态菜单, 默认为False. 如果开启, 则会在每次用户登陆时动态展示菜单内容
+    'menus': [
+
+                {
+                    'app': 'auth',
+                    'name': '对话聊天',
+                    'icon': 'fas fa-user-shield',
+                    'models': [{
+                        'name': '对话聊天',
+                        'icon': 'fa fa-user',
+                        'url': '/chatgptapi/webui'
+                    }]
+                }, 
+]
+}
