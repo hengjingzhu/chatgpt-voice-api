@@ -2717,8 +2717,11 @@
         const addNewChat = () => {
             // alert(111111)
             let chat = {name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}};
-            chatsData = JSON.parse(window.localStorage.getItem('chats'))
+            chatsData = JSON.parse(window.localStorage.getItem('chats')) || []
+
+            
             chatsData.push(chat);
+            // console.log(chatsData)
             updateChats();
         };
         // 删除整个对话框对话
@@ -2840,8 +2843,9 @@
         // 现有会话记录函数
         var activeChat = () => {
             
-            // console.log(chatsData,1111111111111,chatsData[activeChatIdx])
-            data = chatsData[activeChatIdx]["data"];
+            // console.log(chatsData,1111111111111)
+            // data = [{'role':'user','content':''}]
+            data = chatsData[activeChatIdx]["data"] ;
             Array.from(document.getElementsByClassName("activeChatLi")).forEach(item => {
                 item.classList.remove("activeChatLi");
             });
@@ -2966,7 +2970,7 @@
 
         // 一刷新页面时候加载,取出对话记录，加载到对话框
         const initChats = () => {
-
+            
             let localChats = localStorage.getItem("chats");
             let localChatIdx = localStorage.getItem("activeChatIdx")
             activeChatIdx = (localChatIdx && parseInt(localChatIdx)) || 0;
@@ -2976,10 +2980,12 @@
                     chatEleAdd(i);
                 }
             } else {
+                
                 addNewChat();
                 chatEleAdd(activeChatIdx);
             }
         };
+
         initChats();
         activeChat();
 
