@@ -287,7 +287,6 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
     list_editable =('system_role_random_weight',)
 
     readonly_fields = ('creator',)
-    exclude = ('system_role_description',)
     
 
     def display_image(self, obj):
