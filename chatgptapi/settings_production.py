@@ -67,6 +67,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+
             ],
         },
     },
@@ -191,7 +193,7 @@ SIMPLEUI_HOME_PAGE = '/chatgptapi'
 SIMPLEUI_HOME_TITLE = '首页'
 # 设置simpleui 点击首页图标跳转的地址
 SIMPLEUI_INDEX = '/chatgptapi'
-
+SIMPLEUI_ANALYSIS = False
 SIMPLEUI_HOME_INFO = False
 
 SIMPLEUI_DEFAULT_THEME = 'e-black-pro.css'
@@ -209,6 +211,10 @@ STATICFILES_DIRS = ['chatgptapiv1/static/']
 
 # 静态文件在容器内的目录
 STATIC_ROOT = '/djangostatic'
+
+
+MEDIA_URL = '/media/'   #配置上传文件相关的url路由 http://127.0.0.1/media/xxxx
+MEDIA_ROOT = os.path.join(BASE_DIR,'media/')   #配置上传文件的存储本地路径,通知Django,media root在哪里
 
 
 # 当前主机ip

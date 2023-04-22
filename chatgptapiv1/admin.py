@@ -11,14 +11,20 @@ from django.db import models
 from django.forms import Textarea
 from django.db.models import Q
 from django.contrib.admin import SimpleListFilter
+from django.core import serializers
 
+from django.utils.html import format_html
+
+
+
+import json
 
 # 我在左上角
-admin.site.site_header = '智慧语音管理平台'
+admin.site.site_header = '智慧平台'
 # 我在浏览器标签
-admin.site.site_title = '智慧语音管理平台'
+admin.site.site_title = '智慧平台'
 # 我在后台首页
-admin.site.index_title = '智慧语音'
+admin.site.index_title = 'AI'
 
 # 用户表
 @admin.register(UserInfo)
@@ -121,7 +127,7 @@ class UserInfoAdmin(UserAdmin):
                     userinfo_redis['userinfo'] = userinfo_dict
                     print('新用户信息token已更新完毕',userinfo_redis)
                 else:
-                    userinfo_redis = {'userinfo':userinfo_dict,"blackbox":[],'RoleVoiceAttribution':{}}
+                    userinfo_redis = {'userinfo':userinfo_dict,"blackbox":[],'RoleVoiceAttribution':{},'webuidata':{}}
 
                 saving_result = cache.set(username,userinfo_redis,timeout=None)
                 print(saving_result)
@@ -149,18 +155,18 @@ class UserInfoAdmin(UserAdmin):
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
-            
+        # 二级管理员查看其他用户的字段
         elif not request.user.is_superuser and user_in_view_form_OBJ != request.user:
             self.fieldsets = (
             (None,{'fields':('username','password','first_name','last_name','email')}),
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            #(gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
+            (gettext_lazy('Permissions'), {'fields': ('is_staff',)}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
-            
+        # 二级管理员看自己的字段
         elif not request.user.is_superuser and user_in_view_form_OBJ == request.user:
 
             self.readonly_fields = ['jwt_token','status','creator','customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status']
@@ -170,7 +176,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            #(gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
+            (gettext_lazy('Permissions'), {'fields': ('is_staff',)}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -199,7 +205,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            #(gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
+            (gettext_lazy('Permissions'), {'fields': ('is_staff',)}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -276,10 +282,22 @@ class CustomRoleVoiceAttributionFilter(SimpleListFilter):
 # 角色声音属性表
 @admin.register(RoleVoiceAttribution)
 class RoleVoiceAttributionAdmin(admin.ModelAdmin):
-    list_display = ('system_role','system_role_random_weight','system_role_alivoice_role','shart_with_subadmin','creator','is_active')
+    list_display = ('display_image','system_role','system_role_random_weight','system_role_nickname','display_background_image','system_role_alivoice_role','shart_with_subadmin','creator')
     list_per_page = 30
     list_editable =('system_role_random_weight',)
+
     readonly_fields = ('creator',)
+    exclude = ('system_role_description',)
+    
+
+    def display_image(self, obj):
+        return format_html('<img src="{}" width="50" height="50" />', obj.avatar.url)
+    display_image.short_description = '角色头像'
+
+    def display_background_image(self, obj):
+        return format_html('<img src="{}" width="50" height="50" />', obj.background_image.url)
+    display_background_image.short_description = '角色背景'
+
 
     def save_model(self, request, obj, form, change):
         
@@ -301,7 +319,23 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
         else:
             obj.creator = request.user
 
+        # 删除原来的图片，在 models 中写好
+        obj.delete_old_image()
+
         super().save_model(request, obj, frontend_formdata, change)
+
+    def save_related(self,request, form, formsets, change):
+        #print(form.cleaned_data,type(form.cleaned_data),change)
+        
+        # 点击保存之后，把 pg 的数据库更新完毕之后，把所有的属性角色放到 redis 数据库中， key 名 "allRoleVoiceAttribution"
+        RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.all()
+
+        # 返回列表格式的字符串  [{"model": "chatgptapiv1.rolevoiceattribution", "pk": 27, "fields": {"system_role": "general-admin", "system_role_description": "you are a helpful ai", "system_role_random_weight": 1, "chatgpt_model_temperature": "0.80", "chatgpt_model_p": "1.00", "chatgpt_frequency_penalty": "1.00", "chatgpt_presence_penalty": "0.60", "chatgpt_max_reponse_tokens": 250, "system_role_alivoice_role": "zhimiao_emo", "system_role_alivoice_samplerate": 16000, "system_role_alivoice_speechrate": 0, "system_role_alivoice_pitchrate": 0, "system_role_aivoice_speak_effect": "", "system_role_alivoice_speak_emotion": "gentle", "system_role_alivoice_speak_intensity": "1.00", "creator": 1, "shart_with_subadmin": true, "created_time": "2023-03-17T19:09:56.208Z", "updated_time": "2023-03-19T12:27:35.696Z", "is_active": true}},{....},....]
+        allRoleVoiceAttribution_str = serializers.serialize('json', RoleVoiceAttribution_queryset)
+        # print(allRoleVoiceAttribution_str,type(allRoleVoiceAttribution_str))
+
+        cache.set('allRoleVoiceAttribution',allRoleVoiceAttribution_str,timeout=None)
+        super().save_related(request, form, formsets, change)
 
 
     # superuser 权限返回所有，其他用户只能返回 superuser创建的角色以及自己创建的角色
@@ -313,7 +347,7 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
             self.readonly_fields = ('creator',)
             return qs
 
-        # 其他后台管理人员登陆只能看到公共角色，或者是自己创建的角色
+        # 其他后台管理人员登陆只能看到公共角色，或者是二级管理员自己创建的角色
         return qs.filter(Q(shart_with_subadmin=True) | Q(creator=request.user))
 
 
@@ -346,6 +380,8 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
                     pass
 
 
+    
+
     # 管理员返回所有，其他管理员只能看到部分字段
     def change_view(self, request, object_id, form_url='', extra_context=None):
         
@@ -354,7 +390,18 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
             
         elif not request.user.is_superuser:
             self.readonly_fields = ('creator','shart_with_subadmin')
-        
+            
+            # 获取当前查看的对象,如果查看的对象的创建者是 superuser的话，不能看角色描述信息
+            obj = self.get_object(request, object_id)
+            if obj.creator.is_superuser:
+                # 所有字段设置为只读
+                self.exclude = ('system_role_description',)
+                self.readonly_fields = [field.name for field in self.model._meta.fields if field.name!= 'system_role_description']
+                
+            else:
+                 self.exclude = ('',)
+
+
         return super().change_view(
             request, object_id, form_url, extra_context=extra_context,
         )

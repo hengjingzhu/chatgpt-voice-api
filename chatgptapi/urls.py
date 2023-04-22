@@ -16,6 +16,9 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path,include
 from django.views.generic.base import RedirectView
+from django.conf.urls.static import static
+from django.conf import settings
+
 #from chatgptapi.views import IndexView
 favicon_view = RedirectView.as_view(url='/static/image/favicon.ico', permanent=True)
 
@@ -25,3 +28,5 @@ urlpatterns = [
     path('chatgptapi/',include('chatgptapiv1.urls')),
     path('favicon.ico', favicon_view),
 ]
+
+urlpatterns += static(settings.MEDIA_URL,document_root = settings.MEDIA_ROOT)

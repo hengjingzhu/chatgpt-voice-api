@@ -10,7 +10,6 @@ from chatgptapiv1.models import BlackBox
 # 这是一个检查 jwt token 的装饰器
 def check_jwt(fn):
     def warp(request,*args,**kwargs):
-        
         # 从请求体中获取 post 消息
         received_message_dict = json.loads(request.body)
         

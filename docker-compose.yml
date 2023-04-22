@@ -11,6 +11,7 @@ services:
     volumes:
       # 把静态文件夹目录挂载出来,方便 nginx 转发
       - /opt/DjangoChatGPTAPI/djangostatic:/djangostatic
+      - /opt/DjangoChatGPTAPI/djangomedia:/chatgpt_voice_api/media
 
     deploy:
       replicas : 3

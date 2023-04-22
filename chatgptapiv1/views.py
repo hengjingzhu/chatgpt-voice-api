@@ -433,9 +433,9 @@ class WebUIChat(View):
         if request.user.is_superuser:
             RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.all()
         elif not request.user.is_superuser:
-            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=request.user.id) | Q(creator_id=request.user.creator)).filter(Q(system_role_random_weight__gt=99))
+            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=request.user.id) | Q(creator_id=request.user.creator)).filter(Q(system_role_random_weight__gte=10))
 
-        rolelist = serializers.serialize('json', RoleVoiceAttribution_queryset, fields=('system_role','system_role_description','system_role_random_weight','chatgpt_model_temperature','chatgpt_model_p','chatgpt_frequency_penalty','chatgpt_presence_penalty','chatgpt_max_reponse_tokens'))
+        rolelist = serializers.serialize('json', RoleVoiceAttribution_queryset, fields=('system_role','system_role_random_weight','chatgpt_model_temperature','chatgpt_model_p','chatgpt_frequency_penalty','chatgpt_presence_penalty','chatgpt_max_reponse_tokens','system_role_nickname','avatar','background_image'))
         
         username = request.user.username
         userinfo_redis = cache.get(username)
@@ -445,24 +445,42 @@ class WebUIChat(View):
 
         return render(request,'webui/index.html',locals())
     
-    # 备用版，不知道为什么没调好
-    def generate_response_stream(self,response):
-        full_reply_content = ''
-        for chunk in response:
-            message = chunk['choices'][0]['delta'].get('content')
-            # print(message)
-            if message:
-                yield json.dumps(message)
-                full_reply_content=full_reply_content+message
-        print(full_reply_content)
 
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
 
+        received_message_dict = json.loads(request.body)
+        
+        system_role_id = received_message_dict['role'].get('system_role_id')
+        system_role_title = received_message_dict['role'].get('selected_role_title')
+
+        # 从 redis 中取出 system_role_description 信息
+        if (system_role_id and system_role_title):
+            allRoleVoiceAttribution = json.loads(cache.get('allRoleVoiceAttribution'))
+            for role in allRoleVoiceAttribution:
+                if str(role.get('pk')) == str(system_role_id):
+                    selected_system_role_dict = {"role": "system", "content": "{}".format(role['fields'].get('system_role_description'))}
+                    selected_system_model_temperature = float(role['fields'].get('chatgpt_model_temperature'))
+                    selected_system_model_p = float(role['fields'].get('chatgpt_model_p'))
+                    selected_system_frequency_penalty = float(role['fields'].get('chatgpt_frequency_penalty'))
+                    selected_system_presence_penalty = float(role['fields'].get('chatgpt_presence_penalty'))
+                    selected_system_max_reponse_tokens = role['fields'].get('chatgpt_max_reponse_tokens')
+                    # print(selected_system_role_dict,selected_system_model_temperature,selected_system_model_p,selected_system_frequency_penalty,selected_system_presence_penalty,selected_system_max_reponse_tokens)
+
+                    break
+        else:
+            selected_system_role_dict = {"role": "system", "content": "you are a helpful AI"}
+            selected_system_model_temperature = 1
+            selected_system_model_p = 1
+            selected_system_frequency_penalty = 0
+            selected_system_presence_penalty = 0
+            selected_system_max_reponse_tokens = 3000
+
+            print(selected_system_role_dict)
         # {'userinfo': {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True,'is_superuser':True,'creator':1'},'blackbox': [], 'RoleVoiceAttribution': ''}
         # 这也是存在redis数据库中的数据格式
         existed_userinfo_redis = kwargs['existed_userinfo_redis']['userinfo']
-
+        
         max_tokens_put_into_GPT_for_this_user = existed_userinfo_redis['max_tokens']
         username =  existed_userinfo_redis['username']
         user_id = existed_userinfo_redis['id']
@@ -471,51 +489,145 @@ class WebUIChat(View):
 
         # history_messages = kwargs['existed_userinfo_redis']['blackbox']
         # RoleVoiceAttribution_this_dialog = kwargs['existed_userinfo_redis']['RoleVoiceAttribution']
-    
+
+        # 看看是否已经原来就有对话记录，如果没有就新建一个空字典
+        webuidata = kwargs['existed_userinfo_redis'].get('webuidata')
+        if not webuidata:
+            webuidata={}
+            print('webuidata还没有信息')
+
+
+        
+
         inputmessage = kwargs['inputmessage']
-        print('此次登陆的用户',existed_userinfo_redis,inputmessage)
+        print('此次登陆的用户',existed_userinfo_redis)
         # 历史会话
         history_messages = inputmessage[:-1]
         # 本次消息
         currentinputmessage = inputmessage[-1]['content']
         print('inputmessage',inputmessage)
-        
-        
-        # 内置定义函数
-        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
-            full_reply_content = ''
-            for response in openai.ChatCompletion.create(
-                model = OPEN_AI_MODEL_NAME,
-                messages = inputmessage,
-                temperature = MODEL_TEMPERATURE,
-                stream = True,
-                max_tokens = MAX_TOKEN_RESPONSE,
-                top_p = MODEL_TOP_P,
-                frequency_penalty = FREQUENCY_PENALTY,
-                presence_penalty = PRESENCE_PENALTY,
-            ):
-                
-                message = response['choices'][0]['delta'].get('content')
-                # print(message)
-                if message:
-                    yield json.dumps(message)
-                   
-                    full_reply_content=full_reply_content+message
-            print(full_reply_content)
+        inputmessage.insert(0,selected_system_role_dict)
         
 
+
+
+        # 如果调用次数不是 unlimited 的话，api 次数减少1
+        warning_message_chatgpt = ''
+        # if api_request_left !='unlimited' and api_request_left.isdigit():
+        #     newapi_request_left = int(api_request_left)-1
+        #     existed_userinfo_redis['api_request_left'] = str(newapi_request_left)
+        # # 如果调用次数低于3次次数减一,回复的chatgpt消息后面要加有提示,少于0的话，已经再装饰器里拦截掉了
+        # if api_request_left.isdigit() and int(api_request_left)<=3:
+        #     warning_message_chatgpt = f'您还剩下{newapi_request_left}次调用机会，可以去充值啦!'        
+
+        # 如果还有1天时候过期，回复提示
+        if token_expired_time:
+            #print(token_expired_time,type(token_expired_time))
+            # 获取当前时间
+            now = datetime.now(timezone(timedelta(hours=8)))
+            # 计算时间差
+            time_diff =token_expired_time-now
+            # 将时间差转换为小时数
+            hours_diff = int(time_diff.total_seconds() / 3600)
+            if hours_diff <=24:
+                # 将当前时间格式化为 年-月-日 时:分:秒 的字符串
+                token_expired_time_string = token_expired_time.strftime("%Y年%m月%d日 %H点%M分%S秒")
+                warning_message_chatgpt = f'您的账号将于{token_expired_time_string}到期,可以去充值啦!'
+
+                
+
+
+
+        # 内置定义函数
+        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
+            # full_reply_content = ''
+            # collected_chunks = []
+            # collected_messages = []
+            
+            try:
+                for response in openai.ChatCompletion.create(
+                    model = OPEN_AI_MODEL_NAME,
+                    messages = inputmessage,
+                    temperature = MODEL_TEMPERATURE,
+                    stream = True,
+                    max_tokens = MAX_TOKEN_RESPONSE,
+                    top_p = MODEL_TOP_P,
+                    frequency_penalty = FREQUENCY_PENALTY,
+                    presence_penalty = PRESENCE_PENALTY,
+                ):
+                    
+                    # collected_chunks.append(response)  # save the event response
+                    # chunk_message = response['choices'][0]['delta']  # extract the message
+                    # collected_messages.append(chunk_message)  # save the message
+
+                    message = response['choices'][0]['delta'].get('content')
+                    # print(message)
+                    if message:
+                        yield json.dumps(message)
+                        
+                        # full_reply_content=full_reply_content+message
+                #返回警告信息
+                if warning_message_chatgpt:
+                    yield json.dumps(warning_message_chatgpt)
+
+            except Exception as e:
+                yield json.dumps(str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话')
+                # print(traceback.format_exc())
+
+
+            # print(full_reply_content)
+            # full_reply_content = ''.join([m.get('content', '') for m in collected_messages])
+            # print(f"Full conversation received: {full_reply_content}")
+            
+
+        
         # 返回数据流给前端
         return StreamingHttpResponse(chat_stream_generator(
                                         OPEN_AI_MODEL_NAME = OPEN_AI_MODEL_NAME,
                                         inputmessage=inputmessage,
-                                        MODEL_TEMPERATURE=0.6,
-                                        MAX_TOKEN_RESPONSE = MAX_TOKEN_RESPONSE,
-                                        MODEL_TOP_P = MODEL_TOP_P,
-                                        FREQUENCY_PENALTY = 0.1,
-                                        PRESENCE_PENALTY = 0.1)
+                                        MODEL_TEMPERATURE=selected_system_model_temperature,
+                                        MAX_TOKEN_RESPONSE = selected_system_max_reponse_tokens,
+                                        MODEL_TOP_P = selected_system_model_p,
+                                        FREQUENCY_PENALTY = selected_system_frequency_penalty,
+                                        PRESENCE_PENALTY = selected_system_presence_penalty)
                                         , 
                                         content_type='application/json')
+            
+           
+       
+        
 
+    # 删除数据
+    @method_decorator(check_jwt)
+    def delete(self,request,*args,**kwargs):
+        received_message_dict = json.loads(request.body)
+        system_role_id = received_message_dict['role'].get('system_role_id')
+        system_role_title = received_message_dict['role'].get('selected_role_title')
+
+        existed_userinfo_redis = kwargs['existed_userinfo_redis']['userinfo']
+        
+        max_tokens_put_into_GPT_for_this_user = existed_userinfo_redis['max_tokens']
+        username =  existed_userinfo_redis['username']
+        user_id = existed_userinfo_redis['id']
+        api_request_left = existed_userinfo_redis['api_request_left']
+        token_expired_time = existed_userinfo_redis['token_expired_time']
+
+        inputmessage = kwargs['inputmessage']
+        print('此次登陆的用户',existed_userinfo_redis,inputmessage)
+
+        
+        # 存储到数据库中
+        try:
+            if system_role_id and system_role_title:
+                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=system_role_id,diolog=inputmessage)
+            # 如果没有选择角色那就归类到无角色中
+            else:
+                BlackBox.objects.create(user_id=user_id,RoleVoiceAttribution_id=39,diolog=inputmessage)
+        except Exception as e:
+            print(traceback.format_exc())
+
+        result = {"code":200,"status":"delete success"}
+        return JsonResponse(result)
 
 # 数据分析页面
 class IndexView(View):

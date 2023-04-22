@@ -1,12 +1,20 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="zh-CN">
 
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="description" content="使用ChatGPT接口，实现简单HTML网页版在线聊天" />
 
+
+
 <head>
     <meta charset="utf-8">
     <title>ChatGPT 3.5</title>
+
+    <link rel="stylesheet" href="{% static 'css/web-ui/awselect.css' %}">
+    
+
+
     <style>
         * {
             box-sizing: border-box;
@@ -20,18 +28,53 @@
 
         body {
             background-color: #304156;
+            /* background-color: rgba(0, 0, 0, 0.1); */
+            /* background-image: url("/static/image/adai.png");
+            filter: blur(5px) brightness(0.8);
+            opacity: 0.8;
+            z-index: -1; */
+            /* background-size: cover;
+            background-repeat: no-repeat; */
+            
             width: 100%;
             height: 100%;
             margin: 0;
         }
 
+        .background-image {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            /* background-image: url("/static/image/adai.png"); */
+            background-image: url("{% static 'image/adai.png' %}");
+            background-size: cover;
+            background-position: center;
+            filter: blur(5px) brightness(0.8);
+            opacity: 0.4;
+        }
+
+        .avatarimage{
+            max-width: 5%;
+            height: auto;
+            object-fit: contain;
+            margin-right: 1%;
+            margin-top: 10%; 
+            margin-bottom: 10%;
+            min-width: 30px;
+            
+        }
+        
+
         /* 用户对话框的css */
         .chat_window {
             position: absolute;
             width: 100%;
-            max-width: 1920px;
+            max-width: 868px;
             height: 100%;
-            max-height: 1080px;
+            max-height: 100%;
             border-radius: 8px;
             background-color: #948ca29c;
             left: 50%;
@@ -39,13 +82,25 @@
             overflow: hidden;
             transform: translate(-50%, -50%);
             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+
+            z-index: 1;
+            
         }
 
         .top_menu {
-            background-color: #f6f6f6;
+            /* background-color: #f6f6f6; */
+            background-color: #e8e4e4;
+            opacity: 0.9;
             width: 100%;
             height: 50px;
             padding: 12px 0;
+            overflow: hidden;
+
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
         }
 
         .top_menu .toggler {
@@ -89,8 +144,18 @@
         .top_menu .title {
             text-align: center;
             color: #909090;
-            font-size: 20px;
+            font-size: 1.3em; /* 设置字体大小为1em */
+            /* font-size: 20px; */
             line-height: 26px;
+
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 100%;
+            max-height: 100%;
+            
         }
 
         .messages {
@@ -99,6 +164,7 @@
             height: calc(100% - 117px);
             overflow-x: hidden;
             overflow-y: auto;
+            
         }
 
         .messages::-webkit-scrollbar,
@@ -204,13 +270,17 @@
         }
 
         #chatlog .response {
-            background: #e6e6ea;
+            background-color: rgb(230, 230, 234,0.5);
+            color: #e6e6ea;
+            /* background: #e6e6ea; */
             /* background: #f7f7f8; */
             position: relative;
+            /* opacity: 0.8; */
         }
 
         .response .markdown-body {
-            background: #e6e6ea;
+            background-color: rgb(230, 230, 234,0);
+            /* background: #e6e6ea; */
             /* background: #f7f7f8 !important; */
         }
 
@@ -353,7 +423,7 @@
             font-size: 18px;
             font-weight: bold;
             border-radius: 3px;
-            background-color: #7d83a1;
+            background-color: #757575;
             border: none;
             padding: 0;
             color: #fff;
@@ -365,15 +435,17 @@
             right: 65px;
             bottom: 10px;
             cursor: not-allowed;
+            opacity: 0.8;
         }
 
         .activeSendBtn {
-            background-color: #99c959 !important;
+            background-color: #211f1fef !important ;
+            /* background-color: #99c959 !important; */
             cursor: pointer !important;
         }
 
         .activeSendBtn:hover {
-            background-color: #90c050 !important;
+            background-color: #020202ef !important ;
         }
 
         #clearConv {
@@ -650,9 +722,9 @@
 
         .optionItems {
             position: absolute;
-            top: -8px;
+            top: -20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: flex-end;
             visibility: hidden;
             z-index: 1;
             color: #808080;
@@ -1170,7 +1242,10 @@
 </head>
 
 <body>
+    
+    <div class="background-image"></div>
 
+    <button id = "pushbuttonClick" style="display: none;"></button>
     <div style="display: none">
         <svg>
             <symbol viewBox="0 0 24 24" id="optionIcon">
@@ -1304,7 +1379,7 @@
                 <span>新建会话</span>
             </div>
             <div id="chatList"></div>
-            <div class="navFooter">
+            <div class="navFooter" style="display: none;">
                 <div class="navFunc">
                     <div id="exportChat">
                         <svg width="24" height="24">
@@ -1343,9 +1418,19 @@
                 <div class="button maximize"></div>
             </div>
 
-            <!-- 标题 -->
-            <div class="title">ChatGPT 3.5</div>
             
+            <!-- 标题 --> 
+            <div class="title" id="chattitle">
+                <img src="/static/image/adai.png" alt="" class="avatarimage">
+                ChatGPT
+            </div>
+            
+
+            <!-- 底部弹窗选择角色按钮栏目 -->
+            <select name="food_selector" id="roleselect" data-placeholder="" data-callback="selectRole_callback">
+            </select>
+           
+
             <!-- 左侧按钮 -->
             <button id="setting" style="display:none;">
                 <svg viewBox="0 0 100 100" style="display:block;" role="img" width="30" height="30">
@@ -1586,7 +1671,15 @@
         </div>
 
 
+
     </div>
+
+    
+    
+     
+
+
+
     <link rel="stylesheet" href="//cdn.staticfile.org/notyf/3.10.0/notyf.min.css">
 
 
@@ -2323,14 +2416,23 @@
         speechServiceEle.dispatchEvent(new Event("change"));
     </script>
     
+    <!-- <script src="{% static 'js/jquery.js' %}"></script> -->
+    <script src="{% static 'js/webui-js/jquery.js' %}"></script>
     <script src="//cdn.staticfile.org/markdown-it/13.0.1/markdown-it.min.js"></script>
     <script src="//cdn.staticfile.org/highlight.js/11.7.0/highlight.min.js"></script>
     <script src="//cdn.staticfile.org/KaTeX/0.16.4/katex.min.js"></script>
     <script src="//npm.elemecdn.com/markdown-it-texmath@1.0.0/texmath.js"></script>
     <script src="//npm.elemecdn.com/markdown-it-link-attributes@4.0.1/dist/markdown-it-link-attributes.min.js"></script>
     
+    
+    <script src="{% static 'js/webui-js/awselect.js' %}"></script>
+
     <script>
 
+    
+        
+        var default_avatar_url = "default/adai.png"
+        var default_background_url = "default/adai.png"
         // 一加载的时候就把后端返回的role数据返回给前端和jwttoken，存储在本地localstorage
         var rolelist = "{{rolelist|escapejs}}"
         window.localStorage.setItem("rolelist",rolelist)
@@ -2577,29 +2679,29 @@
             }
             let optionWidth = existVoice >= 2 ? "96px" : "63px";
             mdOption.innerHTML += `<div class="moreOption" onmouseenter="moreOption(this)">
-            <svg class="optionTrigger" width="16" height="16" role="img"><title>选项</title><use xlink:href="#optionIcon" /></svg>
-            <div class="optionItems" style="width:${optionWidth};left:-${optionWidth}">` + (existVoice >= 2 ? `<div data-id="downAudio" class="optionItem" title="下载语音">
-                <svg width="20" height="20"><use xlink:href="#downAudioIcon" /></svg>
-            </div>` : "") + `<div data-id="delMd" class="optionItem" title="删除">
+            <svg class="optionTrigger" width="16" height="25" role="img"><title>选项</title><use xlink:href="#optionIcon" /></svg>
+            <div class="optionItems" style="width:${optionWidth};left:-${optionWidth}">` + `<div data-id="delMd" class="optionItem" title="删除">
                 <svg width="20" height="20"><use xlink:href="#delIcon" /></svg>
             </div>
             <div data-id="copyMd" class="optionItem" title="复制">
                 <svg width="20" height="20"><use xlink:href="#copyIcon" /></svg>
             </div></div></div>`;
             if (existVoice) {
-                mdOption.innerHTML += `<div id="pronMd" class="readyVoice">
-                <svg width="16" height="16" data-id="voiceMd" role="img"><title>朗读</title><use xlink:href="#readyVoiceIcon" /></svg>
-                <svg width="16" height="16" data-id="voiceMd" role="img"><title>暂停</title><use xlink:href="#pauseVoiceIcon" /></svg>
-                <svg width="16" height="16" data-id="voiceMd" role="img"><title>继续</title><use xlink:href="#resumeVoiceIcon" /></svg>
-                </div>`
+                mdOption.innerHTML += ``
             }
             mdOption.onclick = mdOptionEvent;
         }
-        let chatsData = [];
+        
         let activeChatIdx = 0;
         let data;
-        // 新建对话
+
+        
+       
+        chatsData = []
+        
+        // 新建对话左边导航栏增加
         const chatEleAdd = (idx) => {
+            // console.log(JSON.parse(window.localStorage.getItem('chats')),'chatEleAdd')
             let chat = chatsData[idx];
             let chatEle = document.createElement("div");
             chatEle.className = "chatLi";
@@ -2611,16 +2713,37 @@
             chatEle.onclick = chatEleEvent;
             return chatEle;
         };
-        // 新建对话按钮,新的会话的时候,弹出一个选择，显示可以选择的角色,角色属性事先存储在浏览器的storage
+        // 新建对话按钮,新的会话的时候
         const addNewChat = () => {
             // alert(111111)
-            let chat = {name: "新的会话", data: []};
+            let chat = {name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}};
+            chatsData = JSON.parse(window.localStorage.getItem('chats'))
             chatsData.push(chat);
             updateChats();
         };
-        // 删除对话（要修改成清空对话）
+        // 删除整个对话框对话
         const delChat = (idx) => {
             if (confirmAction("是否删除会话?")) {
+
+                // 清空对话框之前把数据存储到数据库中
+                let current_activeChatIdx = window.localStorage.getItem('activeChatIdx')
+                let current_data = JSON.parse(window.localStorage.getItem('chats'))[current_activeChatIdx]
+                let selected_system_role = current_data.system_role
+                // 一旦清空对话的话，发送ajax 请求到后端，保存数据到数据库中。
+                $.ajax({
+                    contentType: 'application/json',
+                    url: '/chatgptapi/webui', // 请求的 URL
+                    type: 'DELETE', // 请求的类型
+                    data: JSON.stringify({
+                            inputmessage: current_data.data,
+                            authorization: jwt_token,
+                            role: selected_system_role
+                        }), 
+                    success: function(response) {
+                        console.log(response)
+                    },
+                });
+
                 endAll();
                 if (idx === activeChatIdx) {
                     if (idx - 1 >= 0) {
@@ -2629,15 +2752,37 @@
                         activeChatIdx = chatsData.length - 2;
                     }
                 }
+                // console.log(chatsData,'delChat2')
                 chatsData.splice(idx, 1);
+                // console.log(chatsData,'delChat3')
                 chatListEle.children[idx].remove();
+                // console.log(chatsData,'delChat4')
                 if (activeChatIdx === -1) {
                     addNewChat();
+                    chatsData = [{name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}}]
+                    window.localStorage.setItem('chats',chatsData)
                     activeChatIdx = 0;
                     chatEleAdd(activeChatIdx);
+                    // 修改标题
+                    
+                    // console.log(chatsData,'delChat6')
                 }
+                // console.log(chatsData,'delChat7')
+
                 updateChats();
                 activeChat();
+                
+                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    // $("#chattitle").html(`ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-目前无角色`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                }
+                
+
             }
         };
         const endEditEvent = (ev) => {
@@ -2678,6 +2823,10 @@
         };
         // 当前会话记录保存到 windows 本地存储
         const updateChats = () => {
+            
+            // chatsData1 = window.localStorage.getItem('chats')
+            // console.log(JSON.parse(chatsData1),'updateChats')
+            
             localStorage.setItem("chats", JSON.stringify(chatsData));
         };
         const createConvEle = (className) => {
@@ -2689,7 +2838,9 @@
         }
         
         // 现有会话记录函数
-        const activeChat = () => {
+        var activeChat = () => {
+            
+            // console.log(chatsData,1111111111111,chatsData[activeChatIdx])
             data = chatsData[activeChatIdx]["data"];
             Array.from(document.getElementsByClassName("activeChatLi")).forEach(item => {
                 item.classList.remove("activeChatLi");
@@ -2716,15 +2867,101 @@
                 }
             }
             localStorage.setItem("activeChatIdx", activeChatIdx);
+
+            // 修改对话标题
+            try {
+                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                // console.log(current_system_role.system_role_avatar,'current_system_role')
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-目前无角色`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                }
+                
+            } catch (error) {
+                console.log(error)
+                $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-目前无角色`)
+                $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+            }
+            
+
         };
 
-        // 新建对话点击事件
+        // 角色选择框角色和点击事件,加载登录用户可以使用的角色,绑定点击事件,点击选择就存储到本地
+        var rolelist = JSON.parse(window.localStorage.getItem("rolelist",rolelist))
+        for (let index = 0; index < rolelist.length; index++) {
+                const element = rolelist[index];
+                $('#roleselect').append(
+                `<option value="${element.pk}" avatar="${element.fields.avatar}" background="${element.fields.background_image}">
+                    ${element.fields.system_role_nickname}
+                </option>`
+            )
+        }
+        var selectdom_render = $('#roleselect').awselect({
+            // background: "#0f37a9", //the dark blue background
+            active_background:"#dcdada", // the light blue background
+            // placeholder_color: "#97bce0", // the light blue placeholder color
+            // placeholder_active_color: "#0f37a9", // the dark blue placeholder color
+            // option_color:"#405463", // the option colors
+            vertical_padding: "20px", //top and bottom padding
+            horizontal_padding: "20px", // left and right padding,
+            immersive: true,
+        })
+        function selectRole_callback(value){
+            // 当前对话的id
+            let current_activeChatIdx = window.localStorage.getItem('activeChatIdx')
+            // console.log('当前对话IDselectRole_callback',current_activeChatIdx)
+            // 当前选择号的属性的角色,和选择的 avatar 的地址
+            let selected_role_title = $('#roleselect').find(':selected').text()
+            let selected_role_avatar = $('#roleselect').find(':selected').attr("avatar")
+            let selected_role_background = $('#roleselect').find(':selected').attr("background")
+            // console.log(selected_role_background,'selected_role_background')
+            
+            // 把所有对话记录拿出来
+            let allChats_data = JSON.parse(window.localStorage.getItem('chats'))
+            let current_chat = allChats_data[current_activeChatIdx]
+            // console.log(allChats_data,'selectRole_callback')
+            
+
+            if(value){
+                current_chat['system_role'] = {"system_role_id":value,"selected_role_title":selected_role_title,"system_role_avatar":selected_role_avatar,"system_role_background":selected_role_background}
+                
+               
+            }else{
+                current_chat['system_role'] = {"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}
+            }
+            allChats_data.splice(current_activeChatIdx,1,current_chat)
+            window.localStorage.setItem('chats',JSON.stringify(allChats_data))
+            // console.log(allChats_data,'selectRole_callback')
+            // 修改标题
+            $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${selected_role_avatar}" alt="" >ChatGPT 3.5-${selected_role_title}`)
+            $('.background-image').css('background-image', `url({{MEDIA_URL}}${selected_role_background})`);
+            
+        }
+
+        // 按钮新建对话点击事件
         newChatEle.onclick = () => {
             endAll();
             addNewChat();
             activeChatIdx = chatsData.length - 1;
             chatEleAdd(activeChatIdx);
             activeChat();
+            selectRole_callback()
+            
+
+            let new_activeChatIdx = window.localStorage.getItem('activeChatIdx')
+            
+            
+
+            // 修改标题
+            $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-目前无角色`)
+            $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+            
+
+            
+            
         };
 
         // 一刷新页面时候加载,取出对话记录，加载到对话框
@@ -2804,11 +3041,22 @@
                 chatEleAdd(activeChatIdx);
                 updateChats();
                 activeChat();
+                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                console.log(current_system_role,'current_system_role')
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    // $("#chattitle").html(`ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-目前无角色`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                }
             }
         };
         const endAll = () => {
             endSpeak();
             if (loading) stopLoading();
+
         };
 
         // 初始化右侧按钮配置
@@ -3515,8 +3763,11 @@
             }
 
             // 在系统信息中,从头部压入系统角色
-            dataSlice.unshift({"role": "system", "content": "You are a helpful assistant."})
+            // dataSlice.unshift({"role": "system", "content": "You are a helpful assistant."})
             var jwt_token = window.localStorage.getItem("jwt_token")
+            var currentChatIdx = window.localStorage.getItem('activeChatIdx')
+            var selected_system_role = JSON.parse(window.localStorage.getItem("chats"))[currentChatIdx].system_role
+        
             try {
                 const res = await fetch("/chatgptapi/webui", {
                     // openai 官方地址
@@ -3525,7 +3776,8 @@
                     headers,
                     body: JSON.stringify({
                         inputmessage: dataSlice,
-                        authorization: jwt_token
+                        authorization: jwt_token,
+                        role: selected_system_role
 
                         // messages: dataSlice,
                         // model: modelVersion,
@@ -3546,7 +3798,8 @@
                         notyf.error("无权使用此模型，请打开设置选择其他GPT模型！");
                     } else if (res.status === 429) {
                         notyf.error(res.statusText ? "触发API调用频率限制，请稍后重试！" : "API使用超出限额，请检查您的账单！");
-                    } else {
+                    } else  {
+                        console.log(res)
                         notyf.error("网关错误或超时，请稍后重试！");
                     }
                     stopLoading();
@@ -3561,6 +3814,7 @@
                             // console.log('beforedecode',value)
                             value = decoder.decode(value);
                             // console.log('value',value,done,typeof(value))
+
                             let chunks = [];
                             chunks.unshift(value);
                             // let chunks = value.split(/\n{2}/g);
@@ -3569,7 +3823,7 @@
                                 // return item.trim();
                                 return item
                             });
-                            console.log('chunksfilter',chunks,typeof(chunks))
+                            // console.log('chunksfilter',chunks,typeof(chunks))
                             for (let i = 0; i < chunks.length; i++) {
                                 let chunk = chunks[i];
                                 if (chunk) {
@@ -3581,7 +3835,13 @@
                                         // payload = JSON.parse(chunk.slice(6));
                                         // 自己连接使用这个
                                         payload = JSON.parse(chunk)
-                                        // console.log('payload3',payload)   
+                                        // console.log('payload3',payload)
+
+                                        // 如果报错返回的数据格式式result = {'code':200,'message':'您的用户名找不到,请联系老朱',"voice":voice_url}
+                                        // 把里面的message 拿出来跳出弹窗
+                                        if(payload.message){
+                                            alert(payload.message)
+                                        } 
                                         
                                     } catch (e) {
                                         // 如果解析失败要考虑如下情况
@@ -3595,27 +3855,27 @@
                                         }
                                         try {
                                             if (payload.includes("\\n")){
-                                                console.log('这个字符串包含\\n');
+                                                // console.log('这个字符串包含\\n');
                                                 // 将连续的反斜杠（两个反斜杠）替换为一个
                                                 payload = payload.replace(/\\\\/g, '\\');
                                                 payload = JSON.parse(`"${payload}"`);
                                             }
 
                                             if (containsUtf8EncodedString(payload)){
-                                                console.log('这个字符串是 utf-8');
+                                                // console.log('这个字符串是 utf-8');
                                                 // 将连续的反斜杠（两个反斜杠）替换为一个
                                                 payload = payload.replace(/\\\\/g, '\\');
                                                 payload = JSON.parse(`"${payload}"`);
                                             }
                                             
                                             if(payload.includes("\\")){
-                                                console.log('这个字符串包含\\ ');
+                                                // console.log('这个字符串包含\\ ');
                                                 payload = payload.replace(/\\/g, '');
                                             }
 
                                         } catch (error) {
                                             // payload.replace(/\\/g, '');
-                                            console.log('这个字符串包含\\catch ');
+                                            // console.log('这个字符串包含\\catch ');
                                             payload = payload.replace(/\\/g, '');
                                         }
 
@@ -3623,7 +3883,7 @@
                                         //     console.log('这个字符串包含了换行符');
                                         //     // payload.replace('\\n','\n')
                                         // }
-                                        console.log('payload4',payload,typeof(payload))
+                                        // console.log('payload4',payload,typeof(payload))
                     
                                         // break;
                                     }
@@ -3640,9 +3900,9 @@
                                         }
                                         break;
                                     } else {
-                                        console.log('content0',payload)
+                                        // console.log('content0',payload)
                                         let content = payload;
-                                        console.log('content1',content)
+                                        // console.log('content1',content)
                                         // let content = payload.choices[0].delta.content;
                                         if (content) {
                                             // if (!progressData && !content) continue;
@@ -3657,7 +3917,8 @@
                                             }
                                             if (progressData) await delay();
                                             progressData += content;
-                                            console.log(progressData,typeof(progressData))
+                                            // 打印信息
+                                            // console.log(progressData,typeof(progressData))
                                             currentResEle.children[0].innerHTML = md.render(progressData);
                                             if (!isRefresh) {
                                                 scrollToBottom();
@@ -3709,6 +3970,7 @@
                     autoSpeechEvent(voiceText, currentResEle, false, true);
                 }
             }
+            // console.log(chatsData,'stopLoading')
             updateChats();
             controllerId = delayId = refreshIdx = void 0;
             autoVoiceIdx = 0;
@@ -3718,6 +3980,12 @@
             loadAction(false);
         }
         const generateText = async (message) => {
+            // console.log(chatsData,'generateText0')
+            windows_local_chats_data = JSON.parse(window.localStorage.getItem('chats'))
+            // console.log(chatsData,'generateText0.1')
+            chatsData[activeChatIdx]['system_role'] = windows_local_chats_data[activeChatIdx]['system_role']
+
+
             loadAction(true);
             let requestEle = createConvEle("request");
             requestEle.children[0].textContent = message;
@@ -3729,6 +3997,7 @@
                 chatsData[activeChatIdx].name = message;
                 chatListEle.children[activeChatIdx].children[1].textContent = message;
             }
+            // console.log(chatsData,'generateText')
             updateChats();
             scrollToBottom();
             await streamGen();
@@ -3755,11 +4024,42 @@
         stopEle.onclick = stopLoading;
         document.getElementById("clearConv").onclick = () => {
             if (!loading && confirmAction("是否清空会话?")) {
+
+                // 清空对话框之前把数据存储到数据库中
+                let current_activeChatIdx = window.localStorage.getItem('activeChatIdx')
+                let current_data = JSON.parse(window.localStorage.getItem('chats'))[current_activeChatIdx]
+                let selected_system_role = current_data.system_role
+                // 一旦清空对话的话，发送ajax 请求到后端，保存数据到数据库中。
+                $.ajax({
+                    contentType: 'application/json',
+                    url: '/chatgptapi/webui', // 请求的 URL
+                    type: 'DELETE', // 请求的类型
+                    data: JSON.stringify({
+                            inputmessage: current_data.data,
+                            authorization: jwt_token,
+                            role: selected_system_role
+                        }), 
+                    success: function(response) {
+                        console.log(response)
+                    },
+                });
+
                 endSpeak();
                 if (systemRole) {data.length = 1}
                 else {data.length = 0}
                 chatlog.innerHTML = "";
                 updateChats();
+                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="">ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-目前无角色`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                }
+
+
+
             }
         }
     </script>
@@ -3768,6 +4068,7 @@
     <link href="//cdn.staticfile.org/KaTeX/0.16.4/katex.min.css" rel="stylesheet">
     <link href="//npm.elemecdn.com/markdown-it-texmath@1.0.0/css/texmath.css" rel="stylesheet">
     <script defer>
+
         const downRoleController = new AbortController();
         setTimeout(() => {
             downRoleController.abort();

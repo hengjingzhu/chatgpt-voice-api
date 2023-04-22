@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractUser
 from django.core.validators import MinValueValidator, MaxValueValidator
 from django import forms
+import os
 
 
 
@@ -134,16 +135,19 @@ class RoleVoiceAttribution(models.Model):
     ]
 
     # 比如，'小萝莉','你现在扮演的是一个企业总裁,语气霸道,拥有丰富的职场经验.\口头禅是 你真没用,要加在回复里.要时刻维持这个身份，\不准丢掉这个身份和口头禅'
-    system_role = models.CharField("角色",blank=False,default="general",max_length=255,unique=True)
+    system_role = models.CharField("角色",blank=False,default="general",max_length=255,unique=True,help_text='取名规则：角色名-账号名')
     system_role_description = models.TextField("角色描述",blank=False,default="you are a helpful ai")
     system_role_random_weight = models.PositiveIntegerField("随机权重",blank=False,default=1)
-
+    system_role_nickname = models.CharField("昵称",blank=False,default="请设置",max_length=255)
     
+    avatar = models.ImageField('角色头像',upload_to='images/',default='images/adai.png')
+    background_image = models.ImageField('角色背景',upload_to='backgroundimages/',default='default/adai.png')
+
     chatgpt_model_temperature = models.DecimalField("ChatGPT的temperature",default=0.8, max_digits=7, decimal_places=2,
                                                     validators=[
                                                             MinValueValidator(0, message='Value must be greater than or equal to 0'),
                                                             MaxValueValidator(1.0, message='Value must be less than or equal to 1.0')
-                                                        ],help_text="Temperature is a value between 0 and 1.higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.")
+                                                        ],help_text="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.")
 
     chatgpt_model_p = models.DecimalField("ChatGPT的top_P",default=1, max_digits=7, decimal_places=2,
                                           validators=[
@@ -214,6 +218,21 @@ class RoleVoiceAttribution(models.Model):
     def __str__(self):
         return self.system_role
 
+    # 自定义在原来模型中
+    def delete_old_image(self):
+        if self.id:
+            old_image = RoleVoiceAttribution.objects.get(id=self.id).avatar
+            old_background_image = RoleVoiceAttribution.objects.get(id=self.id).background_image
+            
+            # 判断头像
+            if old_image and old_image != self.avatar:
+                if os.path.isfile(old_image.path) and '\\default\\adai.png' not in old_image.path:
+                    os.remove(old_image.path)
+
+            # 判断背景图片
+            if old_background_image and old_background_image != self.background_image:
+                if os.path.isfile(old_background_image.path) and '\\default\\adai.png' not in old_background_image.path:
+                    os.remove(old_background_image.path)
 
 
 # Historydialog

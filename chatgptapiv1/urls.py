@@ -2,6 +2,7 @@
 from django.urls import path
 from chatgptapiv1.views import ResponseTextMessageOnly,ShortVoiceContent,IndexView,WebUIChat
 
+
 urlpatterns = [
     # chatgpt文本回复
     path('textmessage',ResponseTextMessageOnly.as_view()),

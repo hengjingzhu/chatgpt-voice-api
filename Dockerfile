@@ -82,8 +82,9 @@ RUN mkdir /djangostatic/voice
 # 注意如果是文件夹的话，这里的必须是相对路径
 COPY . /chatgpt_voice_api
 
-# 进入到容器内工作目录就是 /anglissData
+# 进入到容器内工作目录就是 
 WORKDIR /chatgpt_voice_api
+RUN mkdir /chatgpt_voice_api/media 
 
 # 设置时间为上海时间
 RUN ln -sf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime
