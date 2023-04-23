@@ -14,15 +14,16 @@ from django.contrib.admin import SimpleListFilter
 from django.core import serializers
 
 from django.utils.html import format_html
+from PIL import Image
 
 
 
 import json
 
 # 我在左上角
-admin.site.site_header = '智慧平台'
+admin.site.site_header = 'AI 智慧平台'
 # 我在浏览器标签
-admin.site.site_title = '智慧平台'
+admin.site.site_title = 'AI 智慧平台'
 # 我在后台首页
 admin.site.index_title = 'AI'
 
@@ -279,11 +280,26 @@ class CustomRoleVoiceAttributionFilter(SimpleListFilter):
 
 
 
+
+# 压缩图片的函数，默认图片不压缩, 并且大于 1M 的时候才会压缩
+def compress_image(image, quality=100, size_limit=1 * 1024 * 1024):
+    if image and '\\default\\adai.png' not in image.path:
+        # 检查图片文件大小是否大于 size_limit（1M）
+        if image.size > size_limit:
+            img = Image.open(image.path)
+
+            if img.mode in ("RGBA", "P"):
+                img = img.convert("RGB")
+
+            img.save(image.path, 'JPEG', quality=quality)
+    return image
+
+
 # 角色声音属性表
 @admin.register(RoleVoiceAttribution)
 class RoleVoiceAttributionAdmin(admin.ModelAdmin):
     list_display = ('display_image','system_role','system_role_random_weight','system_role_nickname','display_background_image','system_role_alivoice_role','shart_with_subadmin','creator')
-    list_per_page = 30
+    list_per_page = 20
     list_editable =('system_role_random_weight',)
 
     readonly_fields = ('creator',)
@@ -294,7 +310,7 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
     display_image.short_description = '角色头像'
 
     def display_background_image(self, obj):
-        return format_html('<img src="{}" width="50" height="50" />', obj.background_image.url)
+        return format_html('<img src="{}" width="50" height="" />', obj.background_image.url)
     display_background_image.short_description = '角色背景'
 
 
@@ -313,15 +329,21 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
         
         # 如果 creator 是 admin,那就说明这个不是其他角色创建的，登录名就是创建名
         # 如果 creator 不是 admin,那就说明这个角色是其他人创建的，不要修改.因为数据库默认创建就是 admin
-        if obj.creator.username == 'admin' and obj.shart_with_subadmin==True:
+        if obj.creator.username == 'admin' and obj.shart_with_subadmin==True or obj.creator.username != 'admin' and request.user.is_superuser:
             pass
-        else:
+        else :
             obj.creator = request.user
 
-        # 删除原来的图片，在 models 中写好
+        # 如果有图片更新的话，就删除老图片，在 model中写好
         obj.delete_old_image()
 
-        super().save_model(request, obj, frontend_formdata, change)
+        # 只有超级用户可以修改，或者不是超级用户的话只能修改自己的角色
+        if request.user.is_superuser or not request.user.is_superuser and obj.creator == request.user:
+            super().save_model(request, obj, frontend_formdata, change)
+            # 压缩头像和背景图片
+            compress_image(obj.avatar)
+            compress_image(obj.background_image)
+
 
     def save_related(self,request, form, formsets, change):
         #print(form.cleaned_data,type(form.cleaned_data),change)

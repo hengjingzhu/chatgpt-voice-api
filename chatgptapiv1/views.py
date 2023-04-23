@@ -430,10 +430,17 @@ class WebUIChat(View):
         Returns:
             render页面: 会话框页面
         """
-        if request.user.is_superuser:
+        user = request.user
+        if user.is_superuser:
             RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.all()
-        elif not request.user.is_superuser:
-            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=request.user.id) | Q(creator_id=request.user.creator)).filter(Q(system_role_random_weight__gte=10))
+        # 如果不是超级用户以及用户在 sub-admin 这个管理组
+        elif not user.is_superuser and user.groups.filter(name='sub-admin'):
+            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=request.user.id)).filter(Q(system_role_random_weight__gte=10))
+
+        # 如果不是超级用户以及用户不在 sub-admin 组，说明是三级用户
+        elif not user.is_superuser and not user.groups.filter(name='sub-admin'):
+            # print(user.groups.filter(name='sub-admin'))
+            RoleVoiceAttribution_queryset = RoleVoiceAttribution.objects.filter(Q(shart_with_subadmin=True) | Q(creator_id=request.user.creator)).filter(Q(system_role_random_weight__gte=10))
 
         rolelist = serializers.serialize('json', RoleVoiceAttribution_queryset, fields=('system_role','system_role_random_weight','chatgpt_model_temperature','chatgpt_model_p','chatgpt_frequency_penalty','chatgpt_presence_penalty','chatgpt_max_reponse_tokens','system_role_nickname','avatar','background_image'))
         

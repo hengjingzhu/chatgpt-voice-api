@@ -147,25 +147,25 @@ class RoleVoiceAttribution(models.Model):
                                                     validators=[
                                                             MinValueValidator(0, message='Value must be greater than or equal to 0'),
                                                             MaxValueValidator(1.0, message='Value must be less than or equal to 1.0')
-                                                        ],help_text="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.")
+                                                        ],help_text="What sampling temperature to use, between 0 and 2. Higher values like 0.8 will make the output more random, while lower values like 0.2 will make it more focused and deterministic.We generally recommend altering this or top_p but not both.")
 
     chatgpt_model_p = models.DecimalField("ChatGPT的top_P",default=1, max_digits=7, decimal_places=2,
                                           validators=[
                                                             MinValueValidator(0, message='Value must be greater than or equal to 0'),
                                                             MaxValueValidator(1.0, message='Value must be less than or equal to 1.0')
-                                                        ])
+                                                        ],help_text="An alternative to sampling with temperature, called nucleus sampling, where the model considers the results of the tokens with top_p probability mass. So 0.1 means only the tokens comprising the top 10% probability mass are considered.We generally recommend altering this or temperature but not both.")
     
     chatgpt_frequency_penalty = models.DecimalField("ChatGPT的FREQUENCY PENALTY",default=1.0, max_digits=7, decimal_places=2,
                                                     validators=[
                                                             MinValueValidator(-2.0, message='Value must be greater than or equal to -2.0'),
                                                             MaxValueValidator(2.0, message='Value must be less than or equal to 2.0')
-                                                        ],help_text='Number between -2.0 and 2.0.当 frequency_penalty 值越大时，生成的文本中重复的词语会更少，从而增加文本的多样性')
+                                                        ],help_text='Number between -2.0 and 2.0.Positive values penalize new tokens based on their existing frequency in the text so far, decreasing the models likelihood to repeat the same line verbatim.当 frequency_penalty 值越大时，生成的文本中重复的词语会更少，从而增加文本的多样性')
     
     chatgpt_presence_penalty = models.DecimalField("ChatGPT的PRESENCE_PENALTY",default=0.6, max_digits=7, decimal_places=2,
                                                    validators=[
                                                             MinValueValidator(-2.0, message='Value must be greater than or equal to -2.0'),
                                                             MaxValueValidator(2.0, message='Value must be less than or equal to 2.0')
-                                                        ],help_text='Number between -2.0 and 2.0.当 presence_penalty 值越大时，生成的文本会更加准确，但也会限制生成的多样性')
+                                                        ],help_text='Number between -2.0 and 2.0.Number between -2.0 and 2.0. Positive values penalize new tokens based on whether they appear in the text so far, increasing the models likelihood to talk about new topics.当 presence_penalty 值越大时，生成的文本会更加准确，但也会限制生成的多样性')
     
     chatgpt_max_reponse_tokens = models.PositiveIntegerField("ChatGPT单次回复最大token",default=250, validators=[
                                                                 MinValueValidator(1, message='Value must be greater than or equal to 1'),
