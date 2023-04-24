@@ -140,7 +140,7 @@ class RoleVoiceAttribution(models.Model):
     system_role_random_weight = models.PositiveIntegerField("随机权重",blank=False,default=1)
     system_role_nickname = models.CharField("昵称",blank=False,default="请设置",max_length=255)
     
-    avatar = models.ImageField('角色头像',upload_to='images/',default='images/adai.png')
+    avatar = models.ImageField('角色头像',upload_to='images/',default='default/adai.png')
     background_image = models.ImageField('角色背景',upload_to='backgroundimages/',default='default/adai.png')
 
     chatgpt_model_temperature = models.DecimalField("ChatGPT的temperature",default=0.8, max_digits=7, decimal_places=2,
