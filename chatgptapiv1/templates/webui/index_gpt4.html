@@ -9,7 +9,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>ChatGPT 3.5</title>
+    <title>ChatGPT 4</title>
 
     <link rel="stylesheet" href="{% static 'css/web-ui/awselect.css' %}">
     
@@ -90,7 +90,7 @@
 
         .top_menu {
             /* background-color: #f6f6f6; */
-            background-color: #e8e4e4;
+            background-color: #bfbfbf;
             opacity: 0.9;
             width: 100%;
             height: 50px;
@@ -167,7 +167,7 @@
 
         .top_menu .title {
             text-align: center;
-            color: #909090;
+            color: #363232;
             font-size: 1.3em; /* 设置字体大小为1em */
             /* font-size: 20px; */
             line-height: 26px;
@@ -1412,7 +1412,7 @@
             
             <!-- 标题 --> 
             <div class="title" id="chattitle">
-                <img src="/static/image/adai.png" alt="" class="avatarimage">
+                <img src="{% static 'image/agua3.png' %}" alt="" class="avatarimage">
                 ChatGPT
             </div>
             
@@ -1649,8 +1649,9 @@
 
     
         
-        var default_avatar_url = "default/adai.png"
-        var default_background_url = "default/adai.png"
+        var default_avatar_url = "{% static 'image/agua3.png' %}"
+
+        var default_background_url = "{% static 'image/agua4.png' %}"
         // 一加载的时候就把后端返回的role数据返回给前端和jwttoken，存储在本地localstorage
         var rolelist = "{{rolelist|escapejs}}"
         window.localStorage.setItem("rolelist",rolelist)
@@ -1901,7 +1902,7 @@
         const addNewChat = () => {
             // alert(111111)
             let chat = {name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}};
-            chatsData = JSON.parse(window.localStorage.getItem('chats')) || []
+            chatsData = JSON.parse(window.localStorage.getItem('chatsgpt4')) || []
 
             
             chatsData.push(chat);
@@ -1913,13 +1914,13 @@
             if (confirmAction("是否删除会话?")) {
 
                 // 清空对话框之前把数据存储到数据库中
-                let current_activeChatIdx = window.localStorage.getItem('activeChatIdx')
-                let current_data = JSON.parse(window.localStorage.getItem('chats'))[current_activeChatIdx]
+                let current_activeChatIdx = window.localStorage.getItem('activeChatIdxgpt4')
+                let current_data = JSON.parse(window.localStorage.getItem('chatsgpt4'))[current_activeChatIdx]
                 let selected_system_role = current_data.system_role
                 // 一旦清空对话的话，发送ajax 请求到后端，保存数据到数据库中。
                 $.ajax({
                     contentType: 'application/json',
-                    url: '/chatgptapi/webui', // 请求的 URL
+                    url: '/chatgptapi/webuigpt4', // 请求的 URL
                     type: 'DELETE', // 请求的类型
                     data: JSON.stringify({
                             inputmessage: current_data.data,
@@ -1947,7 +1948,7 @@
                 if (activeChatIdx === -1) {
                     addNewChat();
                     chatsData = [{name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}}]
-                    window.localStorage.setItem('chats',chatsData)
+                    window.localStorage.setItem('chatsgpt4',chatsData)
                     activeChatIdx = 0;
                     chatEleAdd(activeChatIdx);
                     // 修改标题
@@ -1959,14 +1960,14 @@
                 updateChats();
                 activeChat();
                 
-                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                let current_system_role = JSON.parse(window.localStorage.getItem('chatsgpt4'))[activeChatIdx].system_role
                 if (current_system_role.selected_role_title){
                     $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
-                    // $("#chattitle").html(`ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    // $("#chattitle").html(`ChatGPT 4-${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
-                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4-无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
                 }
                 
 
@@ -2014,7 +2015,7 @@
             // chatsData1 = window.localStorage.getItem('chats')
             // console.log(JSON.parse(chatsData1),'updateChats')
             
-            localStorage.setItem("chats", JSON.stringify(chatsData));
+            localStorage.setItem("chatsgpt4", JSON.stringify(chatsData));
         };
         const createConvEle = (className) => {
             let div = document.createElement("div");
@@ -2054,24 +2055,24 @@
                     }
                 }
             }
-            localStorage.setItem("activeChatIdx", activeChatIdx);
+            localStorage.setItem("activeChatIdxgpt4", activeChatIdx);
 
             // 修改对话标题
             try {
-                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                let current_system_role = JSON.parse(window.localStorage.getItem('chatsgpt4'))[activeChatIdx].system_role
                 // console.log(current_system_role.system_role_avatar,'current_system_role')
                 if (current_system_role.selected_role_title){
                     $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
-                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4-无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
                 }
                 
             } catch (error) {
                 console.log(error)
-                $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
-                $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4-无角色`)
+                $('.background-image').css('background-image', `url(${default_background_url})`);
             }
             
 
@@ -2099,7 +2100,7 @@
         })
         function selectRole_callback(value){
             // 当前对话的id
-            let current_activeChatIdx = window.localStorage.getItem('activeChatIdx')
+            let current_activeChatIdx = window.localStorage.getItem('activeChatIdxgpt4')
             // console.log('当前对话IDselectRole_callback',current_activeChatIdx)
             // 当前选择号的属性的角色,和选择的 avatar 的地址
             let selected_role_title = $('#roleselect').find(':selected').text()
@@ -2108,7 +2109,7 @@
             // console.log(selected_role_background,'selected_role_background')
             
             // 把所有对话记录拿出来
-            let allChats_data = JSON.parse(window.localStorage.getItem('chats'))
+            let allChats_data = JSON.parse(window.localStorage.getItem('chatsgpt4'))
             let current_chat = allChats_data[current_activeChatIdx]
             // console.log(allChats_data,'selectRole_callback')
             
@@ -2121,7 +2122,7 @@
                 current_chat['system_role'] = {"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}
             }
             allChats_data.splice(current_activeChatIdx,1,current_chat)
-            window.localStorage.setItem('chats',JSON.stringify(allChats_data))
+            window.localStorage.setItem('chatsgpt4',JSON.stringify(allChats_data))
             // console.log(allChats_data,'selectRole_callback')
             // 修改标题
             $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${selected_role_avatar}" alt="" >${selected_role_title}`)
@@ -2139,13 +2140,13 @@
             selectRole_callback()
             
 
-            let new_activeChatIdx = window.localStorage.getItem('activeChatIdx')
+            let new_activeChatIdx = window.localStorage.getItem('activeChatIdxgpt4')
             
             
 
             // 修改标题
-            $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
-            $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+            $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4-无角色`)
+            $('.background-image').css('background-image', `url(${default_background_url})`);
             
 
             
@@ -2155,8 +2156,8 @@
         // 一刷新页面时候加载,取出对话记录，加载到对话框
         const initChats = () => {
             
-            let localChats = localStorage.getItem("chats");
-            let localChatIdx = localStorage.getItem("activeChatIdx")
+            let localChats = localStorage.getItem("chatsgpt4");
+            let localChatIdx = localStorage.getItem("activeChatIdxgpt4")
             activeChatIdx = (localChatIdx && parseInt(localChatIdx)) || 0;
             if (localChats) {
                 chatsData = JSON.parse(localChats);
@@ -2231,15 +2232,15 @@
                 chatEleAdd(activeChatIdx);
                 updateChats();
                 activeChat();
-                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                let current_system_role = JSON.parse(window.localStorage.getItem('chatsgpt4'))[activeChatIdx].system_role
                 console.log(current_system_role,'current_system_role')
                 if (current_system_role.selected_role_title){
                     $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
-                    // $("#chattitle").html(`ChatGPT 3.5-${current_system_role.selected_role_title}`)
+                    // $("#chattitle").html(`ChatGPT 4-${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
-                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4-无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
                 }
             }
         };
@@ -2254,7 +2255,7 @@
             const modelEle = document.getElementById("preSetModel");
             // let localModel = localStorage.getItem("modelVersion");
             // 模型名称,这里写死
-            let localModel = "gpt-3.5-turbo";
+            let localModel = "gpt-4";
             if (localModel) {
                 modelVersion = localModel;
                 modelEle.value = localModel;
@@ -2490,11 +2491,11 @@
             // 在系统信息中,从头部压入系统角色
             // dataSlice.unshift({"role": "system", "content": "You are a helpful assistant."})
             var jwt_token = window.localStorage.getItem("jwt_token")
-            var currentChatIdx = window.localStorage.getItem('activeChatIdx')
-            var selected_system_role = JSON.parse(window.localStorage.getItem("chats"))[currentChatIdx].system_role
+            var currentChatIdx = window.localStorage.getItem('activeChatIdxgpt4')
+            var selected_system_role = JSON.parse(window.localStorage.getItem("chatsgpt4"))[currentChatIdx].system_role
         
             try {
-                const res = await fetch("/chatgptapi/webui", {
+                const res = await fetch("/chatgptapi/webuigpt4", {
                     // openai 官方地址
                 // const res = await fetch(apiHost + API_URL, {
                     method: "POST",
@@ -2693,7 +2694,7 @@
         }
         const generateText = async (message) => {
             // console.log(chatsData,'generateText0')
-            windows_local_chats_data = JSON.parse(window.localStorage.getItem('chats'))
+            windows_local_chats_data = JSON.parse(window.localStorage.getItem('chatsgpt4'))
             // console.log(chatsData,'generateText0.1')
             chatsData[activeChatIdx]['system_role'] = windows_local_chats_data[activeChatIdx]['system_role']
 
@@ -2738,13 +2739,13 @@
             if (!loading && confirmAction("是否清空会话?")) {
 
                 // 清空对话框之前把数据存储到数据库中
-                let current_activeChatIdx = window.localStorage.getItem('activeChatIdx')
-                let current_data = JSON.parse(window.localStorage.getItem('chats'))[current_activeChatIdx]
+                let current_activeChatIdx = window.localStorage.getItem('activeChatIdxgpt4')
+                let current_data = JSON.parse(window.localStorage.getItem('chatsgpt4'))[current_activeChatIdx]
                 let selected_system_role = current_data.system_role
                 // 一旦清空对话的话，发送ajax 请求到后端，保存数据到数据库中。
                 $.ajax({
                     contentType: 'application/json',
-                    url: '/chatgptapi/webui', // 请求的 URL
+                    url: '/chatgptapi/webuigpt4', // 请求的 URL
                     type: 'DELETE', // 请求的类型
                     data: JSON.stringify({
                             inputmessage: current_data.data,
@@ -2761,13 +2762,13 @@
                 else {data.length = 0}
                 chatlog.innerHTML = "";
                 updateChats();
-                let current_system_role = JSON.parse(window.localStorage.getItem('chats'))[activeChatIdx].system_role
+                let current_system_role = JSON.parse(window.localStorage.getItem('chatsgpt4'))[activeChatIdx].system_role
                 if (current_system_role.selected_role_title){
                     $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="">${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
-                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4-无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
                 }
 
 

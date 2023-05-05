@@ -69,6 +69,7 @@ class UserInfoAdmin(UserAdmin):
         max_tokens = frontend_formdata.get('max_tokens')
         jwt_token = ''
 
+        # print(frontend_formdata,'customer_type')
         # 无限制超级用户客户，只有超级管理员才能创建超级用户
         if max_tokens and frontend_formdata['customer_type'] == 'superuser' and request.user.is_superuser:
             obj.api_request_left = 'unlimited'
@@ -77,6 +78,7 @@ class UserInfoAdmin(UserAdmin):
             # 制作 jwt_token
             jwt_token = JWTTokenMethod(username,max_tokens).maketoken_superuser()
             obj.jwt_token = jwt_token
+            # print(jwt_token,'无限制超级用户客户，只有超级管理员才能创建超级用户')
         
         # 不是超级管理员的话，创建不了超级用户，数据会被清空
         elif max_tokens and frontend_formdata['customer_type'] == 'superuser' and not request.user.is_superuser:
@@ -84,6 +86,7 @@ class UserInfoAdmin(UserAdmin):
             obj.token_expired_time = None
             obj.jwt_token = ''
             obj.customer_type = None
+            # print(jwt_token,'不是超级管理员的话，创建不了超级用户，数据会被清空')
 
         # 无限制时间，限制次数用户
         elif max_tokens and frontend_formdata['customer_type'] == 'UnlimitedTime_LimitedRequest':
@@ -98,6 +101,7 @@ class UserInfoAdmin(UserAdmin):
             # 制作 jwt_token
             jwt_token = JWTTokenMethod(username,max_tokens).maketoken_unlimitedtime_limitedrequest(api_request_left)
             obj.jwt_token = jwt_token
+            # print(jwt_token,'无限制时间，限制次数用户')
         
         # 无限制次数，限制时间用户
         elif max_tokens and frontend_formdata['customer_type'] == 'LimitedTime_UnlimitedRequest':
@@ -107,18 +111,19 @@ class UserInfoAdmin(UserAdmin):
             # 制作 jwt_token
             jwt_token = JWTTokenMethod(username,max_tokens).maketoken_limitedtime_unlimitedrequest(frontend_formdata['token_expired_time'])
             obj.jwt_token = jwt_token
+            # print(jwt_token,'无限制次数，限制时间用户')
         
         obj.status = 'success'
         obj.creator = request.user
-
+        # print(jwt_token,'jwt_token')
         # 如果 jwt_token有值的话，把 redis 缓存数据中更新 
         if jwt_token:
             
             # 把 obj 转换成字典传输进去
             # {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True}
-            userinfo_dict = model_to_dict(obj, fields=['id','username', 'jwt_token','customer_type','token_expired_time','api_request_left','max_tokens','status','is_active','creator','is_superuser'])
+            userinfo_dict = model_to_dict(obj, fields=['id','username', 'jwt_token','GPT_4_8K','customer_type','token_expired_time','api_request_left','max_tokens','status','is_active','creator','is_superuser'])
             
-            #print('admin中存储前 userinfo_dict',userinfo_dict)
+            print('admin中存储前 userinfo_dict',userinfo_dict)
             for i in range(0,10):
 
                 # 先从 redis 中取出 原有的用户信息
@@ -152,7 +157,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            (gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
+            (gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','GPT_4_8K','is_active','groups', 'user_permissions')}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -163,7 +168,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            (gettext_lazy('Permissions'), {'fields': ('is_staff',)}),
+            (gettext_lazy('Permissions'), {'fields': ('is_staff','GPT_4_8K')}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -177,7 +182,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            (gettext_lazy('Permissions'), {'fields': ('is_staff',)}),
+            (gettext_lazy('Permissions'), {'fields': ('is_staff','GPT_4_8K')}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -195,7 +200,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            (gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','is_active','groups', 'user_permissions')}),
+            (gettext_lazy('Permissions'), {'fields': ('is_superuser','is_staff','GPT_4_8K','is_active','groups', 'user_permissions')}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -206,7 +211,7 @@ class UserInfoAdmin(UserAdmin):
             # 自定义字段显示
             (gettext_lazy('User Information'),{'fields':('customer_type','token_expired_time','api_request_left','max_tokens','jwt_token','status')}),
     
-            (gettext_lazy('Permissions'), {'fields': ('is_staff',)}),
+            (gettext_lazy('Permissions'), {'fields': ('is_staff','GPT_4_8K')}),
     
             (gettext_lazy('Important dates'), {'fields': ('last_login', 'date_joined','creator')}),
         )
@@ -446,9 +451,9 @@ class RoleVoiceAttributionAdmin(admin.ModelAdmin):
 # blackbox 表
 @admin.register(BlackBox)
 class BlackBoxAdmin(admin.ModelAdmin):
-    list_display = ('user','RoleVoiceAttribution','get_creator','updated_time')
+    list_display = ('user','RoleVoiceAttribution','get_creator','updated_time','GPT_model_name')
     list_per_page = 30
-    list_filter = (CustomRoleVoiceAttributionFilter,CustomUserFilter)
+    list_filter = (CustomRoleVoiceAttributionFilter,CustomUserFilter,'GPT_model_name')
     search_fields = ['user__username']
 
     readonly_fields = ['user','RoleVoiceAttribution','updated_time','created_time']

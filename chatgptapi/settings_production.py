@@ -249,10 +249,17 @@ SIMPLEUI_CONFIG = {
                     'name': '对话聊天',
                     'icon': 'fas fa-user-shield',
                     'models': [{
-                        'name': '对话聊天',
+                        'name': 'GPT-3.5',
                         'icon': 'fa fa-user',
                         'url': '/chatgptapi/webui'
-                    }]
+                    },
+                    {
+                        'name': 'GPT-4-8k',
+                        'icon': 'fa fa-user-plus',
+                        'url': '/chatgptapi/webuigpt4'
+                    },
+                    
+                    ]
                 }, 
 ]
 }
