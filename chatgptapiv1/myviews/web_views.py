@@ -544,9 +544,9 @@ class WebUIChat(View):
                 
 
 
-
+        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-3.5-turbo'
         # 内置定义函数
-        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
+        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME_gpt3,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
             # full_reply_content = ''
             # collected_chunks = []
             # collected_messages = []
@@ -568,7 +568,7 @@ class WebUIChat(View):
                     # collected_messages.append(chunk_message)  # save the message
 
                     message = response['choices'][0]['delta'].get('content')
-                    # print(message)
+                    print(message)
                     if message:
                         yield json.dumps(message)
                         
@@ -590,7 +590,7 @@ class WebUIChat(View):
         
         # 返回数据流给前端
         return StreamingHttpResponse(chat_stream_generator(
-                                        OPEN_AI_MODEL_NAME = OPEN_AI_MODEL_NAME,
+                                        OPEN_AI_MODEL_NAME = OPEN_AI_MODEL_NAME_gpt3,
                                         inputmessage=inputmessage,
                                         MODEL_TEMPERATURE=selected_system_model_temperature,
                                         MAX_TOKEN_RESPONSE = selected_system_max_reponse_tokens,

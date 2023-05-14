@@ -229,6 +229,11 @@ JWT_TOKEN_KEY = os.environ.get('JWT_TOKEN_KEY')
 OPENAI_SECRETKEY = os.environ.get('OPENAI_SECRETKEY')
 OPENAI_ORG_ID = os.environ.get('OPENAI_ORG_ID')
 
+
+ALIYUN_REDIS_HOST = os.environ.get('ALIYUN_REDIS_HOST')
+ALIYUN_REDIS_PORT = os.environ.get('ALIYUN_REDIS_PORT')
+ALIYUN_REDIS_PASSWORD = os.environ.get('ALIYUN_REDIS_PASSWORD')
+
 # 阿里云文本合成配置
 ALIYUN_APP_KEY_WOMAN = os.environ.get('ALIYUN_APP_KEY_WOMAN')
 # 阿里云的access_id

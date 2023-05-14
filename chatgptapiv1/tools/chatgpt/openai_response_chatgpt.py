@@ -13,12 +13,12 @@ class OpenAIModel():
   openai.organization = ORG_ID
   openai.api_key = SECRETKEY
 
-  def __init__(self,max_token_response=MAX_TOKEN_RESPONSE,model_temperature=MODEL_TEMPERATURE,model_top_p=MODEL_TOP_P,frequency_penalty=FREQUENCY_PENALTY,presence_penalty=PRESENCE_PENALTY) -> None:
+  def __init__(self,max_token_response=MAX_TOKEN_RESPONSE,model_temperature=MODEL_TEMPERATURE,model_top_p=MODEL_TOP_P,frequency_penalty=FREQUENCY_PENALTY,presence_penalty=PRESENCE_PENALTY,open_ai_model_name = OPEN_AI_MODEL_NAME) -> None:
     
     self.start_sequence = "assistant"
     self.restart_sequence = "user"
     self.prompt = "user"
-    self.OPEN_AI_MODEL_NAME = OPEN_AI_MODEL_NAME
+    self.OPEN_AI_MODEL_NAME = open_ai_model_name
     self.MAX_TOKEN_RESPONSE = max_token_response
     self.MODEL_TEMPERATURE = model_temperature
     self.MODEL_TOP_P = model_top_p

@@ -75,6 +75,9 @@ jobs:
             AWS_EC2_ACCESS_KEY=${{ secrets.AWS_EC2_ACCESS_KEY }}
             AWS_EC2_SECRET_KEY=${{ secrets.AWS_EC2_SECRET_KEY }}
             GPT_DOMAIN_NAME=${{ secrets.GPT_DOMAIN_NAME }}
+            ALIYUN_REDIS_HOST=${{ secrets.ALIYUN_REDIS_HOST }}
+            ALIYUN_REDIS_PORT=${{ secrets.ALIYUN_REDIS_PORT }}
+            ALIYUN_REDIS_PASSWORD=${{ secrets.ALIYUN_REDIS_PASSWORD }}
 
       env:
         DOCKER_USERNAME: ${{ secrets.ALIYUN_CONTAINER_REGISTRY_USERNAME }}

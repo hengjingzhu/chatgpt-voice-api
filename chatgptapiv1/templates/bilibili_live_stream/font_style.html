@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>字幕样式</title>
+
+    <style>
+      *{
+        box-sizing: border-box;
+    }
+
+      body{
+          margin: 0;
+          background-color: #232323;
+          color: #B78C33;;
+          font-family: Calibri, sans-serif;
+          font-weight: bold;
+      }
+
+      .center{
+          width: 100%;
+          height: 100vh;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+      }
+
+      p{
+          width: 30%;
+          font-size: 30px;
+          display: block;
+          text-align: center;
+      }
+
+      .char{
+          font-size: 20px;
+          height: 40px;
+          animation: an 1s ease-out 1 both; 
+          display: inline-block;
+      }
+
+      @keyframes an{
+          from{
+              opacity: 0;
+              transform: perspective(500px) translate3d(-35px, -40px, -150px) rotate3d(1, -1, 0, 35deg);
+          }
+          to{
+              opacity: 1;
+              transform: perspective(500px) translate3d(0, 0, 0);
+          }
+      }
+      .mylink{
+      position: absolute;
+      z-index: 150;
+      bottom: 0;
+      right: 0;
+      width: 100%;
+      text-align: right;
+      padding: .6rem;
+      }
+
+      .mylink a{
+      font-family: Calibri;
+      color: #fff;
+      border-bottom: 1px solid #fff;
+      opacity: .5;
+      transition: opacity .3s;
+      text-decoration: none
+      }
+      .mylink a:hover{
+      opacity: 1
+      }
+    </style>
+
+</head>
+
+<body>
+   
+
+        <!-- <div id="text-container">
+            
+        </div> -->
+    
+
+
+   
+        <div id="text-container">
+          
+        </div>
+      
+        <div class="center">
+          <p id="text">Lorem ipsum dolor sit amet consectetur adipisicing elit. Cupiditate incidunt praesentium, rerum voluptatem in reiciendis officia harum repudiandae tempore suscipit ex ea, adipisci ab porro.</p>
+        </div>
+      
+    
+
+
+</body>
+
+    <script>
+        window.onload = function(){
+            
+          
+            
+            let roomid =  `{{ room_id }}`
+            const sse = new EventSource(`/chatgptapi/bilibili_bullet_streaming_response?roomid=${roomid}`);
+
+            sse.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                
+      
+                old_data =  document.getElementById('text').innerText;
+                // console.log(old_data)
+                // 在这里更新你的页面内容
+                // console.log(data)
+                response = data.text.response
+                nickname = data.text.nickname
+                bullet_comment = data.text.text
+
+                /*var message_show = `${nickname} 说: ${bullet_comment}。\
+                <br/><br/>\
+                <hr/>         \      
+                ${response}`*/
+
+                var message_show = response
+                if (!old_data.includes(response)){
+                  //console.log(message_show.includes(old_data))
+                  document.getElementById('text').innerHTML = message_show;
+
+                  // 动画效果展示
+                  var text = document.getElementById('text');
+                  var newDom = '';
+                  var animationDelay = 6;
+          
+                  for(let i = 0; i < text.innerText.length; i++)
+                  {
+                      newDom += '<span class="char">' + (text.innerText[i] == ' ' ? '&nbsp;' : text.innerText[i])+ '</span>';
+                  }
+      
+                  text.innerHTML = newDom;
+                  var length = text.children.length;
+                  // 动画效果展示结束
+                }
+
+
+                
+                
+
+
+               
+                
+
+            };
+
+            sse.onerror = function() {
+                console.log('SSE 连接发生错误');
+            };
+
+            
+            
+    
+            
+
+           
+
+        }
+    </script>
+
+</html>
