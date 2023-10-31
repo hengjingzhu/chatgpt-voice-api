@@ -261,6 +261,7 @@ class ResponseTextMessageOnly(View):
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
        
+       
         # {'userinfo': {'username': 'admin3', 'customer_type': 'superuser', 'token_expired_time': None, 'api_request_left': 'unlimited', 'max_tokens': 1200, 'jwt_token': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluMyIsInR5cGUiOiJzdXBlcnVzZXIiLCJzdGF0dXMiOiJzdWNjZXNzIiwibWF4X3Rva2VucyI6MTIwMH0.7ZXYHn9s41qvorY_7cX0uudE6NwrwEwsrOmavdN43Vg', 'status': 'success', 'is_active': True,'is_superuser':True,'creator':1'},'blackbox': [], 'RoleVoiceAttribution': ''}
         # 这也是存在redis数据库中的数据格式
         existed_userinfo_redis = kwargs['existed_userinfo_redis']['userinfo']
@@ -455,9 +456,13 @@ class WebUIChat(View):
 
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
+        
+        
+        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-3.5-turbo-16k'
+        
 
         received_message_dict = json.loads(request.body)
-        
+        print(received_message_dict)
         system_role_id = received_message_dict['role'].get('system_role_id')
         system_role_title = received_message_dict['role'].get('selected_role_title')
 
@@ -544,7 +549,7 @@ class WebUIChat(View):
                 
 
 
-        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-3.5-turbo'
+        
         # 内置定义函数
         def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME_gpt3,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
             # full_reply_content = ''

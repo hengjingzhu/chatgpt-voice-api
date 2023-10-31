@@ -7,7 +7,7 @@ from django.conf import settings
 SECRETKEY = settings.OPENAI_SECRETKEY
 ORG_ID = settings.OPENAI_ORG_ID
 #OPENAIMODELNAME = "text-davinci-003"
-OPEN_AI_MODEL_NAME = "gpt-3.5-turbo"
+OPEN_AI_MODEL_NAME = 'gpt-3.5-turbo-16k'
 # max token in one response
 MAX_TOKEN_RESPONSE = 2500
 # chatgpt temperature 

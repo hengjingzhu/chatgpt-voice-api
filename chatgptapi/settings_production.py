@@ -254,7 +254,7 @@ SIMPLEUI_CONFIG = {
                     'name': '对话聊天',
                     'icon': 'fas fa-user-shield',
                     'models': [{
-                        'name': 'GPT-3.5',
+                        'name': 'GPT-3.5-16k',
                         'icon': 'fa fa-user',
                         'url': '/chatgptapi/webui'
                     },
