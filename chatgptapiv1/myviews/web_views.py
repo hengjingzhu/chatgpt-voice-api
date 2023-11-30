@@ -458,7 +458,7 @@ class WebUIChat(View):
     def post(self,request,*args,**kwargs):
         
         
-        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-3.5-turbo-16k'
+        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-3.5-turbo-1106'
         
 
         received_message_dict = json.loads(request.body)
@@ -551,7 +551,14 @@ class WebUIChat(View):
 
         
         # 内置定义函数
-        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME_gpt3,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
+        def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME_gpt3,
+                                  inputmessage=inputmessage,
+                                  MODEL_TEMPERATURE=MODEL_TEMPERATURE,
+                                  MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,
+                                  MODEL_TOP_P=MODEL_TOP_P,
+                                  FREQUENCY_PENALTY=FREQUENCY_PENALTY,
+                                  PRESENCE_PENALTY=PRESENCE_PENALTY
+                                  ):
             # full_reply_content = ''
             # collected_chunks = []
             # collected_messages = []
@@ -573,19 +580,21 @@ class WebUIChat(View):
                     # collected_messages.append(chunk_message)  # save the message
 
                     message = response['choices'][0]['delta'].get('content')
-                    print(message)
-                    if message:
-                        yield json.dumps(message)
+                    # print("本次回复",message)
+                    if message is not None:
+                        # yield json.dumps(message)+"\n"
+                        yield message
                         
                         # full_reply_content=full_reply_content+message
                 #返回警告信息
                 if warning_message_chatgpt:
-                    yield json.dumps(warning_message_chatgpt)
+                    # yield json.dumps(warning_message_chatgpt)
+                    yield warning_message_chatgpt
 
             except Exception as e:
-                yield json.dumps(str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话')
+                # yield json.dumps(str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话')
                 # print(traceback.format_exc())
-
+                yield str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话'
 
             # print(full_reply_content)
             # full_reply_content = ''.join([m.get('content', '') for m in collected_messages])
@@ -687,7 +696,7 @@ class WebUIChat_gpt4(View):
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
 
-            
+        OPEN_AI_MODEL_NAME_gpt4_8k = 'gpt-4-1106-preview'    
 
         received_message_dict = json.loads(request.body)
         
@@ -787,7 +796,6 @@ class WebUIChat_gpt4(View):
                 warning_message_chatgpt = f'您的账号将于{token_expired_time_string}到期,可以去充值啦!'
 
                 
-        OPEN_AI_MODEL_NAME_gpt4_8k = 'gpt-4'
 
         # 内置定义函数
         def chat_stream_generator(OPEN_AI_MODEL_NAME=OPEN_AI_MODEL_NAME_gpt4_8k,inputmessage=inputmessage,MODEL_TEMPERATURE=MODEL_TEMPERATURE,MAX_TOKEN_RESPONSE=MAX_TOKEN_RESPONSE,MODEL_TOP_P=MODEL_TOP_P,FREQUENCY_PENALTY=FREQUENCY_PENALTY,PRESENCE_PENALTY=PRESENCE_PENALTY):
@@ -812,18 +820,21 @@ class WebUIChat_gpt4(View):
                     # collected_messages.append(chunk_message)  # save the message
 
                     message = response['choices'][0]['delta'].get('content')
-                    # print(message)
-                    if message:
-                        yield json.dumps(message)
+                    if message is not None:
+                        # yield json.dumps(message)+"\n"
+                        yield message
                         
                         # full_reply_content=full_reply_content+message
                 #返回警告信息
                 if warning_message_chatgpt:
-                    yield json.dumps(warning_message_chatgpt)
+                    # yield json.dumps(warning_message_chatgpt)
+                    yield warning_message_chatgpt
 
             except Exception as e:
-                yield json.dumps(str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话')
+                # yield json.dumps(str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话')
                 # print(traceback.format_exc())
+                yield str(e)+' 会话可能已经达到最大长度,可清空此次会话 或开始新的会话'
+
 
 
             # print(full_reply_content)

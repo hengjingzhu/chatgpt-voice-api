@@ -259,7 +259,7 @@ SIMPLEUI_CONFIG = {
                         'url': '/chatgptapi/webui'
                     },
                     {
-                        'name': 'GPT-4-8k',
+                        'name': 'GPT-4-128k',
                         'icon': 'fa fa-user-plus',
                         'url': '/chatgptapi/webuigpt4'
                     },

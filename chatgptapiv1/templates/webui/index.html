@@ -2532,22 +2532,24 @@
                 }
                 const decoder = new TextDecoder('utf-8');
                 const reader = res.body.getReader();
+
                 const readChunk = async () => {
                     return reader.read().then(async ({value, done}) => {
                         if (!done) {
                            
                             // console.log('beforedecode',value)
-                            value = decoder.decode(value);
+                            value = decoder.decode(value,{ stream: true });
+                            // value = value.split('\n');
                             // console.log('value',value,done,typeof(value))
-
+                            
                             let chunks = [];
                             chunks.unshift(value);
                             // let chunks = value.split(/\n{2}/g);
                             // console.log('chunks',chunks)
-                            chunks = chunks.filter(item => {
-                                // return item.trim();
-                                return item
-                            });
+                            //chunks = chunks.filter(item => {
+                            //    // return item.trim();
+                            //    return item
+                            //});
                             // console.log('chunksfilter',chunks,typeof(chunks))
                             for (let i = 0; i < chunks.length; i++) {
                                 let chunk = chunks[i];
@@ -2559,7 +2561,8 @@
                                         // openai 官网连接地址使用这个
                                         // payload = JSON.parse(chunk.slice(6));
                                         // 自己连接使用这个
-                                        payload = JSON.parse(chunk)
+                                        // payload = JSON.parse(chunk)
+                                        payload = chunk
                                         // console.log('payload3',payload)
 
                                         // 如果报错返回的数据格式式result = {'code':200,'message':'您的用户名找不到,请联系老朱',"voice":voice_url}
@@ -2571,6 +2574,7 @@
                                     } catch (e) {
                                         // 如果解析失败要考虑如下情况
                                         // 把""去掉
+                                        
                                         payload = chunk.replace(/"/g, '');
                                         
                                         // 判断是不是含有utf-8编码
@@ -2580,37 +2584,30 @@
                                         }
                                         try {
                                             if (payload.includes("\\n")){
-                                                // console.log('这个字符串包含\\n');
+                                                // console.log('这个字符串包含\\n',payload);
                                                 // 将连续的反斜杠（两个反斜杠）替换为一个
                                                 payload = payload.replace(/\\\\/g, '\\');
                                                 payload = JSON.parse(`"${payload}"`);
                                             }
 
                                             if (containsUtf8EncodedString(payload)){
-                                                // console.log('这个字符串是 utf-8');
+                                                console.log('这个字符串是 utf-8',payload);
                                                 // 将连续的反斜杠（两个反斜杠）替换为一个
                                                 payload = payload.replace(/\\\\/g, '\\');
                                                 payload = JSON.parse(`"${payload}"`);
                                             }
                                             
                                             if(payload.includes("\\")){
-                                                // console.log('这个字符串包含\\ ');
+                                                // console.log('这个字符串包含\\ ',payload);
                                                 payload = payload.replace(/\\/g, '');
                                             }
 
                                         } catch (error) {
                                             // payload.replace(/\\/g, '');
-                                            // console.log('这个字符串包含\\catch ');
+                                            // console.log('这个字符串包含\\catch ',payload);
                                             payload = payload.replace(/\\/g, '');
                                         }
 
-                                        // if (payload.includes('\n')) {
-                                        //     console.log('这个字符串包含了换行符');
-                                        //     // payload.replace('\\n','\n')
-                                        // }
-                                        // console.log('payload4',payload,typeof(payload))
-                    
-                                        // break;
                                     }
                                     if (!payload){
                                     // if (payload.choices[0].finish_reason) {
@@ -2627,8 +2624,8 @@
                                         // console.log('content1',content)
                                         // let content = payload.choices[0].delta.content;
                                         if (content) {
-                                            // if (!progressData && !content) continue;
-                                            if (!progressData && !content.trim()) continue;
+                                            if (!progressData && !content) continue;
+                                            //if (!progressData && !content.trim()) continue;
                                             
                                             if (progressData) await delay();
                                             progressData += content;
@@ -2658,6 +2655,7 @@
                 };
                 await readChunk();
             } catch (e) {
+                console.log(e)
                 if (e.message.indexOf("aborted") === -1) {
                     notyf.error("访问接口失败，请检查接口！")
                     stopLoading();
