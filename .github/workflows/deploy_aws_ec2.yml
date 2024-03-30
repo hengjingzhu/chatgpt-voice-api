@@ -78,6 +78,7 @@ jobs:
             ALIYUN_REDIS_HOST=${{ secrets.ALIYUN_REDIS_HOST }}
             ALIYUN_REDIS_PORT=${{ secrets.ALIYUN_REDIS_PORT }}
             ALIYUN_REDIS_PASSWORD=${{ secrets.ALIYUN_REDIS_PASSWORD }}
+            ANTHROPIC_SECRETKEY=${{ secrets.ANTHROPIC_SECRETKEY }}
 
       env:
         DOCKER_USERNAME: ${{ secrets.ALIYUN_CONTAINER_REGISTRY_USERNAME }}

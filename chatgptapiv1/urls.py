@@ -1,6 +1,6 @@
 
 from django.urls import path
-from chatgptapiv1.myviews.web_views import ResponseTextMessageOnly,ShortVoiceContent,IndexView,WebUIChat,WebUIChat_gpt4
+from chatgptapiv1.myviews.web_views import ResponseTextMessageOnly,ShortVoiceContent,IndexView,WebUIChat,WebUIChat_gpt4,WebUIClaude3_Haiku,WebUIClaude3_Sonnet
 from chatgptapiv1.myviews.api_view import GPT_API
 from chatgptapiv1.myviews.bilibili_bullet import bullet_font_view,bullet_font_streaming_response
 
@@ -12,6 +12,9 @@ urlpatterns = [
     path('',IndexView.as_view()),
     path('webui',WebUIChat.as_view()),
     path('webuigpt4',WebUIChat_gpt4.as_view()),
+    path('webuiclaude3haiku',WebUIClaude3_Haiku.as_view()),
+    path('webuiclaude3sonnet',WebUIClaude3_Sonnet.as_view()),
+    
     
     # 纯 chatgpt接口，供外部调用
     path('gptapi',GPT_API.as_view()),

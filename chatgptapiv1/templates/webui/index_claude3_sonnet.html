@@ -1,0 +1,2808 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="使用Claude接口，实现简单HTML网页版在线聊天" />
+
+
+
+<head>
+    <meta charset="utf-8">
+    <title>Claude3 sonnet</title>
+
+    <link rel="stylesheet" href="{% static 'css/web-ui/awselect.css' %}">
+    
+
+
+    <style>
+        * {
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji" !important;
+        }
+
+        html {
+            width: 100%;
+            height: 100%;
+        }
+
+        body {
+            background-color: #304156;
+            /* background-color: rgba(0, 0, 0, 0.1); */
+            /* background-image: url("/static/image/adai.png");
+            filter: blur(5px) brightness(0.8);
+            opacity: 0.8;
+            z-index: -1; */
+            /* background-size: cover;
+            background-repeat: no-repeat; */
+            
+            width: 100%;
+            height: 100%;
+            margin: 0;
+        }
+
+        .background-image {
+            position: fixed;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            /* background-image: url("/static/image/adai.png"); */
+            background-image: url("{% static 'image/adai.png' %}");
+            background-size: cover;
+            /* background-repeat: no-repeat; */
+            background-position: center;
+            filter: blur(5px) brightness(0.8);
+            opacity: 0.4;
+        }
+
+        .avatarimage{
+            max-width: 5%;
+            height: auto;
+            object-fit: contain;
+            margin-right: 1%;
+            margin-top: 10%; 
+            margin-bottom: 10%;
+            min-width: 30px;
+            
+        }
+        
+
+        /* 用户对话框的css */
+        .chat_window {
+            position: absolute;
+            width: 100%;
+            max-width: 868px;
+            height: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+            background-color: #948ca29c;
+            left: 50%;
+            top: 50%;
+            overflow: hidden;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+
+            z-index: 1;
+            
+        }
+
+        .top_menu {
+            /* background-color: #f6f6f6; */
+            background-color: #bfbfbf;
+            opacity: 0.9;
+            width: 100%;
+            height: 50px;
+            padding: 12px 0;
+            overflow: hidden;
+
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .top_menu .toggler {
+            position: absolute;
+            left: 20px;
+            top: 8px;
+            width: 40px;
+            height: 40px;
+            padding: 5px 7px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .toggler .icon {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 80%;
+            height: 80%;
+            pointer-events: none;
+        }
+
+
+        .icon:hover {
+            stroke: rgb(58, 57, 57) !important;
+            stroke-width: 10px !important;
+            /* fill: rgb(146, 146, 146,0.5) !important; */
+        }
+
+
+        /* .top_menu .toggler:hover {
+            background: #e7e7e8;
+        } */
+
+        div.toggler:hover svg path {
+            stroke: rgb(105, 104, 104) !important;
+            stroke-width: 5px !important;
+            fill: rgb(120, 118, 118) !important;
+        }
+
+        .top_menu .toggler .button {
+            width: 26px;
+            height: 4px;
+            border-radius: 4px;
+            position: absolute;
+            pointer-events: none;
+        }
+
+        .top_menu .toggler .button.close {
+            top: 8px;
+            background-color: #99c959;
+        }
+
+        .top_menu .toggler .button.minimize {
+            top: 18px;
+            background-color: #f8b26a;
+        }
+
+        .top_menu .toggler .button.maximize {
+            top: 28px;
+            background-color: #e15b64;
+        }
+
+        .top_menu .title {
+            text-align: center;
+            color: #363232;
+            font-size: 1.3em; /* 设置字体大小为1em */
+            /* font-size: 20px; */
+            line-height: 26px;
+
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            max-width: 100%;
+            max-height: 100%;
+            
+        }
+
+        .messages {
+
+            position: relative;
+            height: calc(100% - 117px);
+            overflow-x: hidden;
+            overflow-y: auto;
+            
+        }
+
+        .messages::-webkit-scrollbar,
+        #chatlog .markdown-body>pre::-webkit-scrollbar,
+        #setDialog::-webkit-scrollbar,
+        #chatList::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        .messages::-webkit-scrollbar-track,
+        #chatlog .response>pre::-webkit-scrollbar-track,
+        #setDialog::-webkit-scrollbar-track,
+        #chatList::-webkit-scrollbar-track {
+            background-clip: padding-box;
+            background: transparent;
+            border: none;
+        }
+
+        .messages::-webkit-scrollbar-corner,
+        #chatlog .response>pre::-webkit-scrollbar-corner,
+        #setDialog::-webkit-scrollbar-corner,
+        #chatList::-webkit-scrollbar-corner {
+            background-color: transparent;
+        }
+
+        .messages::-webkit-scrollbar-thumb,
+        #chatlog .response>pre::-webkit-scrollbar-thumb,
+        #setDialog::-webkit-scrollbar-thumb,
+        #chatList::-webkit-scrollbar-thumb {
+            background-color: rgba(0, 0, 0, 0.1);
+            background-clip: padding-box;
+            border: solid transparent;
+            border-radius: 10px;
+        }
+
+        .messages::-webkit-scrollbar-thumb:hover,
+        #chatlog .response>pre::-webkit-scrollbar-thumb:hover,
+        #setDialog::-webkit-scrollbar-thumb:hover,
+        #chatList::-webkit-scrollbar-thumb:hover {
+            background-color: rgba(0, 0, 0, 0.4);
+        }
+
+        .messages .message {
+            clear: both;
+            overflow: hidden;
+            margin-bottom: 20px;
+            transition: all 0.5s linear;
+            opacity: 0;
+        }
+
+        .messages .message.left .avatar {
+            background-color: #f5886e;
+            float: left;
+        }
+
+        .messages .message.left .text {
+            color: #c48843;
+        }
+
+        .messages .message.right .avatar {
+            background-color: #fdbf68;
+            float: right;
+        }
+
+        .messages .message.right .text {
+            color: #45829b;
+        }
+
+        .messages .message.appeared {
+            opacity: 1;
+        }
+
+        .messages .message .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .messages {
+            font-size: 16px;
+            color: #343541;
+            text-align: center;
+        }
+
+        #chatlog {
+            word-wrap: break-word;
+            text-align: start;
+        }
+
+        #chatlog>div {
+            padding: 18px 25px;
+        }
+
+        #chatlog .request {
+            position: relative;
+            color: white;
+        }
+
+        .requestBody {
+            white-space: pre-wrap;
+        }
+
+        #chatlog .response {
+            background-color: rgb(230, 230, 234,0.5);
+            color: #e6e6ea;
+            /* background: #e6e6ea; */
+            /* background: #f7f7f8; */
+            position: relative;
+            /* opacity: 0.8; */
+        }
+
+        .response .markdown-body {
+            background-color: rgb(230, 230, 234,0);
+            /* background: #e6e6ea; */
+            /* background: #f7f7f8 !important; */
+        }
+
+        #chatlog .markdown-body>pre {
+            overflow-x: auto;
+            padding: 10px;
+            position: relative;
+            background: rgba(180, 180, 180, 0.1);
+        }
+
+        .m-mdic-copy-wrapper {
+            position: absolute;
+            top: 5px;
+            right: 16px;
+        }
+
+        .m-mdic-copy-wrapper span.u-mdic-copy-code_lang {
+            position: absolute;
+            top: 3px;
+            right: calc(100% + 4px);
+            font-family: system-ui;
+            font-size: 12px;
+            line-height: 18px;
+            color: #555;
+            opacity: 0.3;
+        }
+
+        .m-mdic-copy-wrapper div.u-mdic-copy-notify {
+            position: absolute;
+            top: 0;
+            right: 0;
+            padding: 3px 6px;
+            border: 0;
+            border-radius: 3px;
+            background: none;
+            font-family: system-ui;
+            font-size: 12px;
+            line-height: 18px;
+            color: #555;
+            opacity: 0.3;
+            outline: none;
+            opacity: 1;
+            right: 100%;
+            padding-right: 4px;
+        }
+
+        .m-mdic-copy-wrapper button.u-mdic-copy-btn {
+            position: relative;
+            top: 0;
+            right: 0;
+            padding: 3px 6px;
+            border: 0;
+            border-radius: 3px;
+            background: none;
+            font-family: system-ui;
+            font-size: 12px;
+            line-height: 18px;
+            color: #555;
+            opacity: 0.3;
+            outline: none;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+
+        .m-mdic-copy-wrapper button.u-mdic-copy-btn:hover {
+            opacity: 1;
+        }
+
+        #stopChat {
+            display: none;
+            margin: 0 auto;
+            margin-top: 3px;
+            width: 80px;
+            height: 32px;
+            text-align: center;
+            line-height: 32px;
+            color: white;
+            background: #f8b26a;
+            cursor: pointer;
+            border-radius: 3px;
+            position: sticky;
+            bottom: 2px;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #stopChat>svg {
+            margin-right: 8px;
+        }
+
+        #stopChat:hover {
+            background: #f0aa60;
+        }
+
+        .bottom_wrapper {
+            position: relative;
+            width: 100%;
+            background-color: #fff;
+            padding: 10px 10px;
+            position: absolute;
+            bottom: 0;
+        }
+
+        .bottom_wrapper .message_input_wrapper {
+            border: none;
+            width: calc(100% - 143px);
+            position: relative;
+            text-align: left;
+        }
+
+        .bottom_wrapper .message_input_wrapper .message_input_text {
+            border-radius: 4px;
+            border: none;
+            outline: none;
+            resize: none;
+            background: #f6f6f6;
+            color: #24292f;
+            height: 47px;
+            font-size: 16px;
+            max-height: 200px;
+            padding: 13px 0 13px 16px;
+            width: 100%;
+            display: block;
+            transition: background 0.3s;
+        }
+
+        .bottom_wrapper .message_input_wrapper .message_input_text:focus {
+            background: #f0f0f0;
+        }
+
+        .bottom_wrapper .message_input_wrapper .message_input_text::-webkit-scrollbar {
+            display: none;
+            width: 0;
+            height: 0;
+        }
+
+        #sendbutton {
+            width: 80px;
+            height: 47px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 3px;
+            background-color: #757575;
+            border: none;
+            padding: 0;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s linear;
+            text-align: center;
+            float: right;
+            position: absolute;
+            right: 65px;
+            bottom: 10px;
+            cursor: not-allowed;
+            opacity: 0.8;
+        }
+
+        .activeSendBtn {
+            background-color: #211f1fef !important ;
+            /* background-color: #99c959 !important; */
+            cursor: pointer !important;
+        }
+
+        .activeSendBtn:hover {
+            background-color: #020202ef !important ;
+        }
+
+        #clearConv {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            width: 47px;
+            height: 47px;
+            font-size: 16px;
+            display: inline-block;
+            border-radius: 3px;
+            background-color: #909090;
+            border: 2px solid #909090;
+            color: #fff;
+            cursor: pointer;
+            transition: all 0.2s linear;
+        }
+
+        #clearConv>svg {
+            display: block;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #clearConv:hover {
+            background-color: gray;
+            border: 2px solid gray;
+        }
+
+        .loaded>span {
+            display: inline-block;
+        }
+
+        .loaded>svg {
+            display: none;
+        }
+
+        .loading {
+            background: #e7e7e8 !important;
+        }
+
+        .loading>span {
+            display: none;
+        }
+
+        .loading>svg {
+            display: block;
+        }
+
+        .switch-slide {
+            display: inline-block;
+            vertical-align: middle;
+        }
+
+        .switch-slide-label {
+            display: block;
+            width: 38px;
+            height: 18px;
+            background: #909090;
+            border-radius: 30px;
+            cursor: pointer;
+            position: relative;
+            -webkit-transition: 0.3s ease;
+            transition: 0.3s ease;
+        }
+
+        .switch-slide-label:after {
+            content: "";
+            display: block;
+            width: 16px;
+            height: 16px;
+            border-radius: 100%;
+            background: #fff;
+            box-shadow: 0 1px 1px rgba(0, 0, 0, .1);
+            position: absolute;
+            left: 1px;
+            top: 1px;
+            -webkit-transform: translateZ(0);
+            transform: translateZ(0);
+            -webkit-transition: 0.3s ease;
+            transition: 0.3s ease;
+        }
+
+        .switch-slide input:checked+label {
+            background: #99c959;
+            transition: 0.3s ease;
+        }
+
+        .switch-slide input:checked+label:after {
+            left: 21px;
+        }
+
+        #setting {
+            position: absolute;
+            right: 15px;
+            top: 5px;
+            cursor: pointer;
+            padding: 5px;
+            border: none;
+            background-color: transparent;
+            border-radius: 4px;
+        }
+
+        #setting:hover {
+            background: #e7e7e8;
+        }
+
+        .showSetting {
+            background: #b0b0b0 !important;
+        }
+
+        #setDialog {
+            color: #303030;
+            position: absolute;
+            z-index: 2;
+            background: #f6f6f6;
+            width: 320px;
+            right: 6px;
+            top: 46px;
+            overflow-y: auto;
+            max-height: calc(100% - 55px);
+            -webkit-user-select: none;
+            user-select: none;
+            border-radius: 5px;
+            padding: 8px 12px 8px 12px;
+            box-shadow: 0 0 6px rgba(0, 0, 0, 0.15);
+        }
+
+        #setDialog input {
+            width: 100%;
+        }
+
+        #setDialog .inlineTitle {
+            display: inline-block;
+            width: 80px;
+            line-height: 16px;
+            vertical-align: middle;
+        }
+
+        #convOption,
+        #speechOption,
+        #speechDetail,
+        #recOption {
+            margin-bottom: 6px;
+        }
+
+        #convOption>div,
+        #speechOption>div,
+        #speechDetail>div,
+        #recOption div {
+            margin-top: 10px;
+        }
+
+        .inputTextClass {
+            outline: none;
+            border-radius: 2px;
+            margin-top: 2px;
+            height: 32px;
+            font-size: 15px;
+            padding-left: 6px;
+            background: white;
+            border: none;
+        }
+
+        .areaTextClass {
+            width: 100%;
+            height: 80px;
+            display: block;
+            resize: none;
+            padding: 6px;
+        }
+
+        input[type="range"] {
+            -webkit-appearance: none;
+            display: block;
+            margin: 6px 0 3px 0;
+            height: 8px;
+            background: #909090;
+            border-radius: 5px;
+            background-image: linear-gradient(#99c959, #99c959);
+            background-size: 100% 100%;
+            background-repeat: no-repeat;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            background: #99c959;
+            cursor: ew-resize;
+            box-shadow: 0 0 2px 0 #555;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            -webkit-appearance: none;
+            box-shadow: none;
+            border: none;
+            background: transparent;
+        }
+
+        .justSetLine {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .presetSelect>div {
+            display: inline-block;
+        }
+
+        .presetSelect select {
+            outline: none;
+            border-radius: 3px;
+            width: 120px;
+            border-color: rgba(0, 0, 0, .3);
+        }
+
+        .selectDef {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #707070;
+        }
+
+        #preSetSpeech {
+            width: 100%;
+            outline: none;
+            height: 30px;
+            font-size: 14px;
+            margin-top: 5px;
+            border-radius: 3px;
+            border-color: rgba(0, 0, 0, .3);
+        }
+
+        .mdOption {
+            position: absolute;
+            right: 5px;
+            bottom: 0px;
+            pointer-events: none;
+        }
+
+        .mdOption>div {
+            margin-top: 4px;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+
+        .mdOption>div>svg {
+            color: #e3e3e3;
+            display: block;
+        }
+
+        .mdOption svg:hover {
+            color: #989898;
+        }
+
+        .mdOption svg * {
+            pointer-events: none;
+        }
+
+        .refreshReq svg:not(:first-child) {
+            display: none;
+        }
+
+        .halfRefReq svg:not(:nth-child(2)) {
+            display: none;
+        }
+
+        .moreOption {
+            position: relative;
+        }
+
+        .optionItems {
+            position: absolute;
+            top: -20px;
+            display: flex;
+            justify-content: flex-end;
+            visibility: hidden;
+            z-index: 1;
+            color: #808080;
+        }
+
+        .moreOptionHidden>div {
+            display: none !important;
+        }
+
+        .optionItems:hover {
+            visibility: visible;
+        }
+
+        .optionItems:hover .optionItem {
+            transform: scale(1);
+            visibility: visible;
+        }
+
+        .optionTrigger:hover+.optionItems .optionItem:nth-of-type(3) {
+            transform: scale(1);
+            visibility: visible;
+            transition-delay: 50ms;
+            transition-duration: 60ms;
+        }
+
+        .optionTrigger:hover+.optionItems .optionItem:nth-of-type(2) {
+            visibility: visible;
+            transition-delay: 80ms;
+            transform: scale(1);
+            transition-duration: 60ms;
+        }
+
+        .optionTrigger:hover+.optionItems .optionItem:nth-of-type(1) {
+            visibility: visible;
+            transition-delay: 110ms;
+            transform: scale(1);
+            transition-duration: 60ms;
+        }
+
+        .optionItem {
+            border-radius: 3px;
+            height: 30px;
+            width: 30px;
+            background-color: #f7f7f8;
+            visibility: hidden;
+            transform: scale(0);
+            display: flex !important;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .optionItem * {
+            pointer-events: none;
+        }
+
+        .optionItem:hover {
+            background: #e0e0e0;
+        }
+
+        .readyVoice svg:not(:first-child) {
+            display: none;
+        }
+
+        .pauseVoice svg:not(:nth-child(2)) {
+            display: none;
+        }
+
+        .resumeVoice svg:not(:nth-child(3)) {
+            display: none;
+        }
+
+
+        .overlay {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            left: 0;
+            top: 0;
+            background-color: rgba(0, 0, 0, .3);
+            z-index: 90;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 200ms ease-in;
+        }
+
+        .nav {
+            width: 250px;
+            height: 100%;
+            background-color: #fafafa;
+            left: -250px;
+            top: 0;
+            position: fixed;
+            transition: left 100ms ease-in-out;
+            z-index: 99;
+            display: flex;
+            flex-direction: column;
+        }
+
+        #newChat {
+            text-align: center;
+            width: 100%;
+            height: 50px;
+            color: #404040;
+            margin: 10px 0 10px 0;
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        #newChat:hover {
+            background: #f0f0f0 !important;
+        }
+
+        #newChat>svg {
+            margin-left: 17px;
+            margin-right: 14px;
+        }
+
+        #newChat>span {
+            height: 20px;
+            line-height: 20px;
+        }
+
+        .divider {
+            width: 100%;
+            border-top: 1px solid #e0e0e0;
+            margin: 8px 0;
+        }
+
+        .navFooter {
+            padding-bottom: 8px;
+        }
+
+        .navFunc {
+            display: flex;
+            justify-content: space-around;
+        }
+
+        .navFunc>div,
+        .navFunc>label {
+            border: 1px solid #e0e0e0;
+            border-radius: 3px;
+            text-align: center;
+            padding: 5px;
+            width: 70px;
+            color: #404040;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .navFunc>div>svg,
+        .navFunc>label>svg {
+            color: #666;
+        }
+
+        .navFunc>div:hover,
+        .navFunc>label:hover {
+            background: #e0e0e0;
+        }
+
+        .links {
+            text-align: center;
+        }
+
+        .links a {
+            color: #404040;
+            text-decoration: none;
+        }
+
+        .links a:hover {
+            color: black !important;
+        }
+
+        .links a:visited {
+            color: #404040;
+        }
+
+        #chatList {
+            width: 100%;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .chatLi {
+            cursor: pointer;
+            width: 100%;
+            height: 50px;
+            color: #909090;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+        }
+
+        .chatLi * {
+            pointer-events: none;
+        }
+
+        .chatLi>svg {
+            margin-left: 18px;
+            color: #505050;
+        }
+
+        .chatLi svg {
+            pointer-events: auto;
+        }
+
+        .chatLi svg * {
+            pointer-events: none;
+        }
+
+        .chatLi .chatName {
+            position: absolute;
+            left: 55px;
+            color: #404040;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            max-width: 125px;
+            line-height: 20px;
+            height: 20px;
+        }
+
+        .chatLi .chatOption {
+            visibility: hidden;
+            display: flex;
+            color: #666;
+            margin-right: 8px;
+        }
+
+        .chatLi:hover {
+            background: #f0f0f0;
+        }
+
+        .activeChatLi {
+            background: #e0e0e0 !important;
+        }
+
+        .activeChatLi .chatOption {
+            visibility: visible !important;
+        }
+
+        .activeChatLi #activeChatEdit {
+            position: absolute;
+            left: 52px;
+            font-size: 16px;
+            border-radius: 2px;
+            background: #f0f0f0;
+            outline: none;
+            border: none;
+            pointer-events: auto;
+            height: 24px;
+            line-height: 24px;
+            width: 160px;
+            padding: 1px 3px;
+            z-index: 1;
+        }
+
+        .show-nav .nav {
+            left: 0;
+            box-shadow: rgba(0, 0, 0, 0.2) 0px 8px 10px -5px, rgba(0, 0, 0, 0.14) 0px 16px 24px 2px, rgba(0, 0, 0, 0.12) 0px 6px 30px 5px;
+        }
+
+        .show-nav .overlay {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #loadMask {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 100;
+            background-color: #edeff2;
+        }
+
+        #loadMask>div {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        #loadMask svg {
+            width: 160px;
+            height: 80px;
+        }
+
+        #loadMask>div>div {
+            font-size: 40px;
+            color: #909090;
+        }
+
+        #voiceRec {
+            position: absolute;
+            right: 0;
+            top: 0;
+            width: 47px;
+            height: 100%;
+        }
+
+        .message_if_voice {
+            padding-right: 47px !important;
+        }
+
+        #voiceRecIcon {
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            cursor: pointer;
+            position: relative;
+        }
+
+        #voiceRecIcon:hover>svg {
+            color: #808080;
+        }
+
+        #voiceRecIcon>svg {
+            width: 28px;
+            height: 28px;
+            color: #b0b0b0;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #voiceRecIcon>svg .animVoice {
+            display: none;
+        }
+
+        .voiceRecing>svg {
+            color: #99c959 !important;
+        }
+
+        .voiceRecing .animVoice {
+            display: inline !important;
+            transform-origin: 0 64%;
+            animation-duration: 1.5s;
+            animation-name: scaleVoice;
+            animation-timing-function: ease;
+            animation-iteration-count: infinite;
+        }
+
+        .voiceLong .animVoice {
+            display: inline !important;
+            transform-origin: 0 64%;
+            animation-duration: 0.3s;
+            animation-name: longVoice;
+            animation-timing-function: ease-in-out;
+            animation-iteration-count: 1;
+        }
+
+        @keyframes longVoice {
+            0% {
+                transform: scaleY(0);
+            }
+
+            100% {
+                transform: scaleY(1);
+            }
+        }
+
+        @keyframes scaleVoice {
+            0% {
+                transform: scaleY(0.28);
+            }
+
+            20% {
+                transform: scaleY(0.60);
+            }
+
+            28% {
+                transform: scaleY(0.28);
+            }
+
+            36% {
+                transform: scaleY(0.45);
+            }
+
+            44% {
+                transform: scaleY(0.28);
+            }
+
+            52% {
+                transform: scaleY(0.45);
+            }
+
+            62% {
+                transform: scaleY(0.80);
+            }
+
+            72% {
+                transform: scaleY(0.80);
+            }
+
+            90% {
+                transform: scaleY(0.28);
+            }
+
+            100% {
+                transform: scaleY(0.28);
+            }
+        }
+
+       
+
+        .presetModelCls label {
+            margin-right: 8px;
+        }
+
+        .presetModelCls select {
+            height: 30px;
+            margin-top: 2px;
+            font-size: 15px;
+        }
+
+        .setSwitch {
+            display: flex;
+
+        }
+
+        .setSwitch>div {
+            border-radius: 3px;
+            width: calc(100% / 3);
+            height: 32px;
+            line-height: 32px;
+            text-align: center;
+            cursor: pointer;
+        }
+
+        .setSwitch>div:hover {
+            background-color: #e0e0e0;
+        }
+
+        .activeSwitch {
+            background-color: #d0d0d0 !important;
+        }
+
+        #checkVoiceLoad {
+            height: 32px;
+            border-radius: 3px;
+            line-height: 32px;
+            background: #d0d0d0;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        #checkVoiceLoad:hover {
+            background: #c0c0c0;
+        }
+
+        .voiceChecking {
+            background-color: #c0c0c0 !important;
+        }
+
+        .voiceChecking>svg {
+            display: inline !important;
+        }
+
+        #checkVoiceLoad>svg {
+            display: none;
+            margin-right: 8px;
+            height: 32px;
+            width: 64px;
+        }
+
+        #preSetSystem {
+            height: 20px;
+            line-height: 20px;
+            vertical-align: top;
+        }
+    </style>
+</head>
+
+<body>
+    
+    <div class="background-image"></div>
+
+    <button id = "pushbuttonClick" style="display: none;"></button>
+    <div style="display: none">
+        <svg>
+            <symbol viewBox="0 0 24 24" id="optionIcon">
+                <path fill="currentColor"
+                    d="M12 3c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2zm0 14c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2zm0-7c-1.1 0-2 .9-2 2s.9 2 2 2s2-.9 2-2s-.9-2-2-2z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="refreshIcon">
+                <path fill="currentColor"
+                    d="M18.537 19.567A9.961 9.961 0 0 1 12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10c0 2.136-.67 4.116-1.81 5.74L17 12h3a8 8 0 1 0-2.46 5.772l.997 1.795z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="halfRefIcon">
+                <path fill="currentColor"
+                    d="M 4.009 12.163 C 4.012 12.206 2.02 12.329 2 12.098 C 2 6.575 6.477 2 12 2 C 17.523 2 22 6.477 22 12 C 22 14.136 21.33 16.116 20.19 17.74 L 17 12 L 20 12 C 19.999 5.842 13.333 1.993 7.999 5.073 C 3.211 8.343 4.374 12.389 4.009 12.163 Z" />
+            </symbol>
+            <symbol viewBox="-2 -2 20 20" id="copyIcon">
+                <path fill="currentColor"
+                    d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 0 1 0 1.5h-1.5a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-1.5a.75.75 0 0 1 1.5 0v1.5A1.75 1.75 0 0 1 9.25 16h-7.5A1.75 1.75 0 0 1 0 14.25Z">
+                </path>
+                <path fill="currentColor"
+                    d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0 1 14.25 11h-7.5A1.75 1.75 0 0 1 5 9.25Zm1.75-.25a.25.25 0 0 0-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 0 0 .25-.25v-7.5a.25.25 0 0 0-.25-.25Z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="delIcon">
+                <path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M9 7v0a3 3 0 0 1 3-3v0a3 3 0 0 1 3 3v0M9 7h6M9 7H6m9 0h3m2 0h-2M4 7h2m0 0v11a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="readyVoiceIcon">
+                <path fill="currentColor"
+                    d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 16 16" id="pauseVoiceIcon">
+                <path stroke="currentColor" stroke-width="2" d="M5 2v12M11 2v12"></path>
+            </symbol>
+            <symbol viewBox="0 0 16 16" id="resumeVoiceIcon">
+                <path fill="currentColor" d="M4 2L4 14L12 8Z"></path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="stopResIcon">
+                <path fill="currentColor"
+                    d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10zm0-2a8 8 0 1 0 0-16a8 8 0 0 0 0 16zM9 9h6v6H9V9z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 128 128" id="downAudioIcon">
+                <path
+                    d="M 64.662 1.549 C 56.549 4.524, 46.998 14.179, 45.523 20.895 C 45.041 23.089, 44.073 23.833, 40.433 24.807 C 34.752 26.326, 27.956 32.929, 25.527 39.289 C 24.273 42.574, 23.884 45.715, 24.196 50.034 C 24.620 55.897, 24.528 56.193, 21.836 57.585 C 17.142 60.012, 16 63.617, 16 76 C 16 88.463, 17.137 91.985, 21.967 94.483 C 28.244 97.729, 36.120 95.350, 38.579 89.466 C 39.387 87.532, 40 82.764, 40 78.415 C 40 70.971, 40.060 70.783, 42.250 71.370 C 43.487 71.701, 48.888 71.979, 54.250 71.986 L 64 72 64 76 L 64 80 57.122 80 C 49.420 80, 48.614 80.543, 47.547 86.453 C 46.552 91.964, 43.550 97.473, 40.273 99.803 C 33 104.974, 23.120 105.042, 16.118 99.971 C 11.407 96.558, 9.048 92.484, 8.145 86.205 C 6.963 77.979, 0.794 77.729, 0.191 85.883 C -0.196 91.111, 3.323 99.170, 8.062 103.908 C 11.290 107.136, 20.073 111.969, 22.750 111.990 C 23.540 111.996, 24 113.472, 24 116 C 24 119.740, 23.813 120, 21.122 120 C 17.674 120, 15.727 122.044, 16.173 125.195 C 16.492 127.441, 16.781 127.500, 27.391 127.500 C 36.676 127.500, 38.445 127.242, 39.386 125.750 C 40.993 123.203, 38.986 120.568, 35.149 120.187 C 32.206 119.894, 32 119.617, 32 115.956 C 32 112.509, 32.330 111.959, 34.750 111.377 C 42.181 109.591, 52.157 101.208, 53.575 95.559 C 53.928 94.152, 54.514 93, 54.878 93 C 55.242 93, 59.797 97.275, 65 102.500 C 70.762 108.286, 75.256 112, 76.495 112 C 77.769 112, 83.287 107.231, 91.264 99.236 C 101.113 89.366, 104 85.876, 104 83.843 C 104 80.580, 102.553 80, 94.418 80 L 88 80 88 76.105 L 88 72.211 99.750 71.815 C 113.117 71.364, 117.595 69.741, 122.762 63.473 C 128.159 56.925, 129.673 45.269, 126.134 37.500 C 123.787 32.346, 117.218 26.445, 112.132 24.921 C 108.617 23.868, 107.767 22.968, 105.028 17.405 C 99.364 5.901, 89.280 -0.062, 75.712 0.070 C 71.746 0.109, 66.773 0.774, 64.662 1.549 M 67.885 9.380 C 60.093 12.164, 55.057 17.704, 52.527 26.276 C 51.174 30.856, 50.220 31.617, 44.729 32.496 C 37.017 33.729, 30.917 42.446, 32.374 50.154 C 34.239 60.026, 40.582 63.944, 54.750 63.978 L 64 64 64 57.122 C 64 52.457, 64.449 49.872, 65.396 49.086 C 66.310 48.328, 70.370 48.027, 77.146 48.214 L 87.500 48.500 87.794 56.359 L 88.088 64.218 98.989 63.845 C 108.043 63.535, 110.356 63.125, 112.634 61.424 C 119.736 56.122, 121.911 47.667, 118.097 40.190 C 115.870 35.824, 110.154 32.014, 105.790 31.985 C 102.250 31.961, 101.126 30.787, 99.532 25.443 C 95.580 12.197, 80.880 4.736, 67.885 9.380 M 72 70.800 C 72 80.978, 71.625 85.975, 70.800 86.800 C 70.140 87.460, 67.781 88, 65.559 88 L 61.517 88 68.759 95.241 L 76 102.483 83.241 95.241 L 90.483 88 86.441 88 C 84.219 88, 81.860 87.460, 81.200 86.800 C 80.375 85.975, 80 80.978, 80 70.800 L 80 56 76 56 L 72 56 72 70.800 M 25.200 65.200 C 23.566 66.834, 23.566 85.166, 25.200 86.800 C 27.002 88.602, 29.798 88.246, 30.965 86.066 C 31.534 85.002, 32 80.472, 32 76 C 32 71.528, 31.534 66.998, 30.965 65.934 C 29.798 63.754, 27.002 63.398, 25.200 65.200"
+                    stroke="none" fill="currentColor" fill-rule="evenodd" />
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="chatIcon">
+                <path fill="currentColor"
+                    d="m18 21l-1.4-1.4l1.575-1.6H14v-2h4.175L16.6 14.4L18 13l4 4l-4 4ZM3 21V6q0-.825.588-1.413T5 4h12q.825 0 1.413.588T19 6v5.075q-.25-.05-.5-.063T18 11q-.25 0-.5.013t-.5.062V6H5v10h7.075q-.05.25-.063.5T12 17q0 .25.013.5t.062.5H6l-3 3Zm4-11h8V8H7v2Zm0 4h5v-2H7v2Zm-2 2V6v10Z" />
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="chatEditIcon">
+                <path fill="currentColor"
+                    d="M5 19h1.4l8.625-8.625l-1.4-1.4L5 17.6V19ZM19.3 8.925l-4.25-4.2l1.4-1.4q.575-.575 1.413-.575t1.412.575l1.4 1.4q.575.575.6 1.388t-.55 1.387L19.3 8.925ZM17.85 10.4L7.25 21H3v-4.25l10.6-10.6l4.25 4.25Zm-3.525-.725l-.7-.7l1.4 1.4l-.7-.7Z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="deleteIcon">
+                <path fill="currentColor"
+                    d="M8 20v-5h2v5h9v-7H5v7h3zm-4-9h16V8h-6V4h-4v4H4v3zM3 21v-8H2V7a1 1 0 0 1 1-1h5V3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v3h5a1 1 0 0 1 1 1v6h-1v8a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z">
+                </path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="addIcon" stroke="currentColor" fill="none" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </symbol>
+            <symbol viewBox="0 0 200 100" preserveAspectRatio="xMidYMid" id="loadingIcon">
+                <g transform="translate(50 50)">
+                    <circle cx="0" cy="0" r="15" fill="#e15b64">
+                        <animateTransform attributeName="transform" type="scale" begin="-0.3333333333333333s"
+                            calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1"
+                            dur="1s" repeatCount="indefinite"></animateTransform>
+                    </circle>
+                </g>
+                <g transform="translate(100 50)">
+                    <circle cx="0" cy="0" r="15" fill="#f8b26a">
+                        <animateTransform attributeName="transform" type="scale" begin="-0.16666666666666666s"
+                            calcMode="spline" keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1"
+                            dur="1s" repeatCount="indefinite"></animateTransform>
+                    </circle>
+                </g>
+                <g transform="translate(150 50)">
+                    <circle cx="0" cy="0" r="15" fill="#99c959">
+                        <animateTransform attributeName="transform" type="scale" begin="0s" calcMode="spline"
+                            keySplines="0.3 0 0.7 1;0.3 0 0.7 1" values="0;1;0" keyTimes="0;0.5;1" dur="1s"
+                            repeatCount="indefinite"></animateTransform>
+                    </circle>
+                </g>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="exportIcon">
+                <path fill="currentColor"
+                    d="M4 19h16v-7h2v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8h2v7zM14 9h5l-7 7l-7-7h5V3h4v6z"></path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="importIcon">
+                <path fill="currentColor"
+                    d="M4 19h16v-7h2v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-8h2v7zM14 9v6h-4V9H5l7-7l7 7h-5z"></path>
+            </symbol>
+            <symbol viewBox="0 0 24 24" id="clearAllIcon">
+                <path fill="currentColor"
+                    d="M12 22C6.477 22 2 17.523 2 12S6.477 2 12 2s10 4.477 10 10s-4.477 10-10 10zm0-2a8 8 0 1 0 0-16a8 8 0 0 0 0 16zm0-9.414l2.828-2.829l1.415 1.415L13.414 12l2.829 2.828l-1.415 1.415L12 13.414l-2.828 2.829l-1.415-1.415L10.586 12L7.757 9.172l1.415-1.415L12 10.586z">
+                </path>
+            </symbol>
+        </svg>
+    </div>
+
+    <!-- loading层 -->
+    <div id="loadMask">
+        <div>
+            <div>Claude读取中</div>
+            <svg>
+                <use xlink:href="#loadingIcon" />
+            </svg>
+        </div>
+    </div>
+
+
+    <div class="chat_window">
+        
+        <!-- 遮罩层 -->
+        <div class="overlay"></div>
+        
+        <!-- 对话左侧导航栏 -->
+        <nav class="nav">
+            <div id="newChat">
+                <svg width="24" height="24">
+                    <use xlink:href="#addIcon" />
+                </svg>
+                <span>新建会话</span>
+            </div>
+            <div id="chatList"></div>
+            <div class="navFooter" style="display: none;">
+                <div class="navFunc">
+                    <div id="exportChat">
+                        <svg width="24" height="24">
+                            <use xlink:href="#exportIcon" />
+                        </svg>
+                        <span>导出</span>
+                    </div>
+                    <label id="importChat" for="importChatInput">
+                        <svg width="24" height="24">
+                            <use xlink:href="#importIcon" />
+                        </svg>
+                        <span>导入</span>
+                    </label>
+                    <input type="file" style="display: none;" id="importChatInput" accept="application/json" />
+                    <div id="clearChat">
+                        <svg width="24" height="24">
+                            <use xlink:href="#clearAllIcon" />
+                        </svg>
+                        <span>清空</span>
+                    </div>
+                </div>
+                <div class="divider"></div>
+                <div class="links">
+                    <a href="/" target="_blank"
+                        rel="noopener noreferrer">Github</a>
+                </div>
+            </div>
+        </nav>
+
+        
+        <!-- 顶层菜单两个按钮 -->
+        <div class="top_menu">
+            <div class="toggler">
+
+                
+                <svg t="1682271272193" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="2630" width="200" height="200"><path d="M426.666667 426.666667H85.546667A85.418667 85.418667 0 0 0 0 512c0 47.445333 38.314667 85.333333 85.546667 85.333333H426.666667v341.12c0 47.274667 38.186667 85.546667 85.333333 85.546667 47.445333 0 85.333333-38.314667 85.333333-85.546667V597.333333h341.12A85.418667 85.418667 0 0 0 1024 512c0-47.445333-38.314667-85.333333-85.546667-85.333333H597.333333V85.546667A85.418667 85.418667 0 0 0 512 0c-47.445333 0-85.333333 38.314667-85.333333 85.546667V426.666667z" fill="#919191" p-id="2631"></path></svg>
+            </div>
+
+            
+            <!-- 标题 --> 
+            <div class="title" id="chattitle">
+                <img src="{% static 'image/pikachu1.png' %}" alt="" class="avatarimage">
+                Claude3 sonnet
+            </div>
+            
+
+            <!-- 底部弹窗选择角色按钮栏目 -->
+            <select name="food_selector" id="roleselect" data-placeholder="" data-callback="selectRole_callback">
+            </select>
+           
+
+            <!-- 左侧按钮 -->
+            <button id="setting" style="display:none;">
+                <svg viewBox="0 0 100 100" style="display:block;" role="img" width="30" height="30">
+                    <title>设置</title>
+                    <circle cx="50" cy="20" r="10" fill="#e15b64" />
+                    <circle cx="50" cy="50" r="10" fill="#f8b26a" />
+                    <circle cx="50" cy="80" r="10" fill="#99c959" />
+                </svg>
+            </button>
+            <div id="setDialog" style="display:none;">
+                <div class="setSwitch">
+                    <div data-id="convOption" class="activeSwitch">对话</div>
+                    <div data-id="speechOption">语音合成</div>
+                    <div data-id="recOption">语音识别</div>
+                </div>
+                <div id="convOption">
+                    <div class="presetSelect presetModelCls">
+                        <label for="preSetModel">GPT模型</label>
+                        <select id="preSetModel">
+                            <option value="gpt-3.5-turbo">gpt-3.5</option>
+                            <option value="gpt-4">gpt-4</option>
+                            <option value="gpt-4-32k">gpt-4-32k</option>
+                        </select>
+                    </div>
+                    <div>
+                        <div>自定义接口</div>
+                        <input class="inputTextClass" placeholder="https://example.com/" id="apiHostInput" />
+                    </div>
+                    <div>
+                        <div>自定义API key</div>
+                        <input class="inputTextClass" type="password" placeholder="sk-xxxxxx" id="keyInput"
+                            style="-webkit-text-security: disc;" />
+                    </div>
+                    <div>
+                        <div class="justSetLine presetSelect">
+                            <div>系统角色</div>
+                            <div>
+                                <label for="preSetSystem">预设角色</label>
+                                <select id="preSetSystem">
+                                    <option value="">默认</option>
+                                    <option value="normal">助手</option>
+                                    <option value="cat">猫娘</option>
+                                    <option value="emoji">表情</option>
+                                    <option value="image">有图</option>
+                                </select>
+                            </div>
+                        </div>
+                        <textarea class="inputTextClass areaTextClass" placeholder="你是一个乐于助人的助手，尽量简明扼要地回答"
+                            id="systemInput"></textarea>
+                    </div>
+                    <div>
+                        <span>角色性格</span>
+                        <input type="range" id="top_p" min="0" max="1" value="1" step="0.05" />
+                        <div class="selectDef">
+                            <span>准确严谨</span>
+                            <span>灵活创新</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span>回答质量</span>
+                        <input type="range" id="temp" min="0" max="2" value="1" step="0.05" />
+                        <div class="selectDef">
+                            <span>重复刻板</span>
+                            <span>胡言乱语</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span>打字机速度</span>
+                        <input type="range" id="textSpeed" min="0" max="100" value="88" step="1" />
+                        <div class="selectDef">
+                            <span>慢</span>
+                            <span>快</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="inlineTitle">连续对话</span>
+                        <label class="switch-slide">
+                            <input type="checkbox" id="enableCont" checked hidden />
+                            <label for="enableCont" class="switch-slide-label"></label>
+                        </label>
+                    </div>
+                    <div>
+                        <span class="inlineTitle">长回复</span>
+                        <label class="switch-slide">
+                            <input type="checkbox" id="enableLongReply" hidden />
+                            <label for="enableLongReply" class="switch-slide-label"></label>
+                        </label>
+                    </div>
+                </div>
+                
+                
+            </div>
+        </div>
+
+
+        <!-- 对话框 -->
+        <div class="messages">
+            <div id="chatlog"></div>
+            <div id="stopChat"><svg width="24" height="24">
+                    <use xlink:href="#stopResIcon" />
+                </svg>停止</div>
+        </div>
+
+        <!-- 对话框底部发送按钮，包括语音，清空按钮 -->
+        <div class="bottom_wrapper clearfix">
+            <div class="message_input_wrapper">
+                <textarea class="message_input_text" spellcheck="false" placeholder="来问点什么吧" id="chatinput"></textarea>
+                <div id="voiceRec" style="display:none;">
+                    <div id="voiceRecIcon" style="display:none;">
+                        <svg viewBox="0 0 48 48" id="voiceInputIcon">
+                            <g fill="none" stroke="currentColor" stroke-linejoin="round" stroke-width="4">
+                                <rect fill="none" width="14" height="27" x="17" y="4" rx="7" />
+                                <rect class="animVoice" x="18" y="4" width="12" height="27" stroke="none"
+                                    fill="currentColor"></rect>
+                                <path stroke-linecap="round"
+                                    d="M9 23c0 8.284 6.716 15 15 15c8.284 0 15-6.716 15-15M24 38v6" />
+                            </g>
+                        </svg>
+                    </div>
+                    
+                </div>
+            </div>
+            <button class="loaded" id="sendbutton">
+                <span>发送</span>
+                <svg style="margin:0 auto;height:40px;width:100%;">
+                    <use xlink:href="#loadingIcon" />
+                </svg>
+            </button>
+            <button id="clearConv"><svg role="img" width="20px" height="20px">
+                    <title>清空会话</title>
+                    <use xlink:href="#deleteIcon" />
+                </svg></button>
+        </div>
+
+
+
+    </div>
+
+    
+    
+     
+
+
+
+    <link rel="stylesheet" href="//cdn.staticfile.org/notyf/3.10.0/notyf.min.css">
+
+
+    <script src="//cdn.staticfile.org/notyf/3.10.0/notyf.min.js"></script>
+    
+    <!-- 语音功能js -->
+    <script>
+        const notyf = new Notyf({
+            position: {x: 'center', y: 'top'},
+            types: [
+                {
+                    type: 'success',
+                    background: '#99c959',
+                    duration: 2000,
+                },
+                {
+                    type: 'error',
+                    background: '#e15b64',
+                    duration: 3000,
+                }
+            ]
+        });
+        document.body.addEventListener("click", event => {
+            if (event.target.className === "toggler") {
+                document.body.classList.toggle("show-nav");
+            } else if (event.target.className === "overlay") {
+                document.body.classList.remove("show-nav");
+            } else if (event.target === document.body) {
+                document.body.classList.remove("show-nav");
+            }
+        });
+        const messagsEle = document.getElementsByClassName("messages")[0];
+        const chatlog = document.getElementById("chatlog");
+        const stopEle = document.getElementById("stopChat");
+        const sendBtnEle = document.getElementById("sendbutton");
+        const textarea = document.getElementById("chatinput");
+        const settingEle = document.getElementById("setting");
+        const dialogEle = document.getElementById("setDialog");
+        const systemEle = document.getElementById("systemInput");
+        
+        const newChatEle = document.getElementById("newChat");
+        const chatListEle = document.getElementById("chatList");
+       
+        
+       
+        let existVoice = 2; // 3:Azure语音 2:使用edge在线语音, 1:使用本地语音, 0:不支持语音
+        
+        
+        let isSafeEnv = location.hostname.match(/127.|localhost/) || location.protocol.match(/https:|file:/); // https或本地安全环境
+        let recing = false;
+        let toggleRecEv;
+        textarea.focus();
+        const textInputEvent = () => {
+            if (!loading) {
+                if (textarea.value.trim().length) {
+                    sendBtnEle.classList.add("activeSendBtn");
+                } else {
+                    sendBtnEle.classList.remove("activeSendBtn");
+                }
+            }
+            textarea.style.height = "47px";
+            textarea.style.height = textarea.scrollHeight + "px";
+        };
+        textarea.oninput = textInputEvent;
+        
+        
+    </script>
+    
+    <!-- <script src="{% static 'js/jquery.js' %}"></script> -->
+    <script src="{% static 'js/webui-js/jquery.js' %}"></script>
+    <script src="//cdn.staticfile.org/markdown-it/13.0.1/markdown-it.min.js"></script>
+    <script src="//cdn.staticfile.org/highlight.js/11.7.0/highlight.min.js"></script>
+    <script src="//cdn.staticfile.org/KaTeX/0.16.4/katex.min.js"></script>
+    <script src="//npm.elemecdn.com/markdown-it-texmath@1.0.0/texmath.js"></script>
+    <script src="//npm.elemecdn.com/markdown-it-link-attributes@4.0.1/dist/markdown-it-link-attributes.min.js"></script>
+    
+    
+    <script src="{% static 'js/webui-js/awselect.js' %}"></script>
+
+    <script>
+
+    
+        
+        var default_avatar_url = "{% static 'image/pikachu2.png' %}"
+
+        var default_background_url = "{% static 'image/pikachu4.png' %}"
+        // 一加载的时候就把后端返回的role数据返回给前端和jwttoken，存储在本地localstorage
+        var rolelist = "{{rolelist|escapejs}}"
+        window.localStorage.setItem("rolelist",rolelist)
+        var jwt_token = "{{jwt_token|escapejs}}"
+        window.localStorage.setItem("jwt_token",jwt_token)
+
+        const API_URL = "v1/chat/completions";
+        
+
+        var rolelist = JSON.parse(rolelist)
+        
+
+        
+        
+
+        let loading = false;
+        // 加载有多少角色可以选择
+        let presetRoleData = {}
+        // console.log(presetRoleData)
+        rolelist.forEach(element => {
+            presetRoleData[element.fields.system_role] = element.fields.system_role_description
+        });
+        // let presetRoleData = {
+        //     "normal": "你是一个乐于助人的助手，尽量简明扼要地回答",
+        //     "cat": "你是一个可爱的猫娘，每句话结尾都要带个'喵'",
+        //     "emoji": "你的性格很活泼，每句话中都要有至少一个emoji图标",
+        //     "image": "当你需要发送图片的时候，请用 markdown 语言生成，不要反斜线，不要代码框，需要使用 unsplash API时，遵循一下格式， https://source.unsplash.com/960x640/? ＜英文关键词＞"
+        // };
+        let modelVersion; // 模型版本
+        let apiHost; // api反代地址
+        let customAPIKey; // 自定义apiKey
+        let systemRole; // 自定义系统角色
+        let roleNature; // 角色性格
+        let roleTemp; // 回答质量
+        let enableCont; // 是否开启连续对话，默认开启，对话包含上下文信息。
+        let enableLongReply; // 是否开启长回复，默认关闭，开启可能导致api费用增加。
+        let longReplyFlag;
+        let textSpeed; // 打字机速度，越小越快
+       
+        
+
+
+        const scrollToBottom = () => {
+            if (messagsEle.scrollHeight - messagsEle.scrollTop - messagsEle.clientHeight < 128) {
+                messagsEle.scrollTo(0, messagsEle.scrollHeight)
+            }
+        }
+        const scrollToBottomLoad = (ele) => {
+            if (messagsEle.scrollHeight - messagsEle.scrollTop - messagsEle.clientHeight < ele.clientHeight + 128) {
+                messagsEle.scrollTo(0, messagsEle.scrollHeight)
+            }
+        }
+        const md = markdownit({
+            linkify: true, // 识别链接
+            highlight: function (str, lang) { // markdown高亮
+                try {
+                    return hljs.highlightAuto(str).value;
+                } catch (e) { }
+                return ""; // use external default escaping
+            }
+        });
+        md.use(texmath, {engine: katex, delimiters: "dollars", katexOptions: {macros: {"\\RR": "\\mathbb{R}"}}})
+            .use(markdownitLinkAttributes, {attrs: {target: "_blank", rel: "noopener"}});
+        const x = {
+            getCodeLang(str = "") {
+                const res = str.match(/ class="language-(.*?)"/);
+                return (res && res[1]) || "";
+            },
+            getFragment(str = "") {
+                return str ? `<span class="u-mdic-copy-code_lang">${str}</span>` : "";
+            },
+        };
+        const strEncode = (str = "") => {
+            if (!str || str.length === 0) return "";
+            return str
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/'/g, '\'')
+                .replace(/"/g, '&quot;');
+        };
+        const getCodeLangFragment = (oriStr = "") => {
+            return x.getFragment(x.getCodeLang(oriStr));
+        };
+        const copyClickCode = (ele) => {
+            const input = document.createElement("textarea");
+            input.value = ele.dataset.mdicContent;
+            const nDom = ele.previousElementSibling;
+            const nDelay = ele.dataset.mdicNotifyDelay;
+            const cDom = nDom.previousElementSibling;
+            document.body.appendChild(input);
+            input.select();
+            input.setSelectionRange(0, 9999);
+            document.execCommand("copy");
+            document.body.removeChild(input);
+            if (nDom.style.display === "none") {
+                nDom.style.display = "block";
+                cDom && (cDom.style.display = "none");
+                setTimeout(() => {
+                    nDom.style.display = "none";
+                    cDom && (cDom.style.display = "block");
+                }, nDelay);
+            }
+        };
+        const copyClickMd = (idx) => {
+            const input = document.createElement("textarea");
+            input.value = data[idx].content;
+            document.body.appendChild(input);
+            input.select();
+            input.setSelectionRange(0, 9999);
+            document.execCommand("copy");
+            document.body.removeChild(input);
+        }
+        const enhanceCode = (render, options = {}) => (...args) => {
+            /* args = [tokens, idx, options, env, slf] */
+            const {
+                btnText = "复制代码", // button text
+                successText = "复制成功", // copy-success text
+                successTextDelay = 2000, // successText show time [ms]
+                showCodeLanguage = true, // false | show code language
+            } = options;
+            const [tokens = {}, idx = 0] = args;
+            const cont = strEncode(tokens[idx].content || "");
+            const originResult = render.apply(this, args);
+            const langFrag = showCodeLanguage ? getCodeLangFragment(originResult) : "";
+            const tpls = [
+                '<div class="m-mdic-copy-wrapper">',
+                `${langFrag}`,
+                `<div class="u-mdic-copy-notify" style="display:none;">${successText}</div>`,
+                '<button ',
+                'class="u-mdic-copy-btn j-mdic-copy-btn" ',
+                `data-mdic-content="${cont}" `,
+                `data-mdic-notify-delay="${successTextDelay}" `,
+                `onclick="copyClickCode(this)">${btnText}</button>`,
+                '</div>',
+            ];
+            const LAST_TAG = "</pre>";
+            const newResult = originResult.replace(LAST_TAG, `${tpls.join("")}${LAST_TAG}`);
+            return newResult;
+        };
+        const codeBlockRender = md.renderer.rules.code_block;
+        const fenceRender = md.renderer.rules.fence;
+        md.renderer.rules.code_block = enhanceCode(codeBlockRender);
+        md.renderer.rules.fence = enhanceCode(fenceRender);
+        md.renderer.rules.image = function (tokens, idx, options, env, slf) {
+            let token = tokens[idx];
+            token.attrs[token.attrIndex("alt")][1] = slf.renderInlineAsText(token.children, options, env);
+            token.attrSet("onload", "scrollToBottomLoad(this);this.removeAttribute('onload');this.removeAttribute('onerror')");
+            token.attrSet("onerror", "scrollToBottomLoad(this);this.removeAttribute('onload');this.removeAttribute('onerror')");
+            return slf.renderToken(tokens, idx, options)
+        }
+        const mdOptionEvent = function (ev) {
+            let id = ev.target.dataset.id;
+            if (id) {
+                let parent = ev.target.parentElement;
+                let idxEle = parent.parentElement;
+                let idx = Array.prototype.indexOf.call(chatlog.children, this.parentElement);
+                if (id === "refreshMd") {
+                    if (!loading && chatlog.children[idx].dataset.loading !== "true") {
+                        let className = parent.className;
+                        if (className == "refreshReq") {
+                            chatlog.children[idx].children[0].innerHTML = "<br />";
+                            chatlog.children[idx].dataset.loading = true;
+                            idx = systemRole ? idx + 1 : idx;
+                            data[idx].content = "";
+                           
+                            loadAction(true);
+                            refreshIdx = idx;
+                            streamGen();
+                        } else {
+                            chatlog.children[idx].dataset.loading = true;
+                            idx = systemRole ? idx + 1 : idx;
+                            progressData = data[idx].content;
+                            loadAction(true);
+                            refreshIdx = idx;
+                            streamGen(true);
+                        }
+                    }
+                } else if (id === "copyMd") {
+                    idxEle.classList.add("moreOptionHidden");
+                    idx = systemRole ? idx + 1 : idx;
+                    copyClickMd(idx);
+                    notyf.success("复制成功");
+                } else if (id === "delMd") {
+                    idxEle.classList.add("moreOptionHidden");
+                    if (!loading) {
+                        if (confirmAction("是否删除此消息?")) {
+                            
+                            chatlog.removeChild(chatlog.children[idx]);
+                            idx = systemRole ? idx + 1 : idx;
+                            data.splice(idx, 1);
+                            updateChats();
+                        }
+                    }
+                } 
+            }
+        }
+        const moreOption = (ele) => {
+            ele.classList.remove("moreOptionHidden");
+        }
+        const formatMdEle = (ele) => {
+            let realMd = document.createElement("div");
+            realMd.className = ele.className === "request" ? "requestBody" : "markdown-body";
+            ele.appendChild(realMd);
+            let mdOption = document.createElement("div");
+            mdOption.className = "mdOption";
+            ele.appendChild(mdOption);
+            if (ele.className !== "request") {
+                mdOption.innerHTML = `<div class="refreshReq">
+                    <svg data-id="refreshMd" width="16" height="16" role="img"><title>刷新</title><use xlink:href="#refreshIcon" /></svg>
+                    <svg data-id="refreshMd" width="16" height="16" role="img"><title>继续</title><use xlink:href="#halfRefIcon" /></svg>
+                    </div>`
+            }
+            let optionWidth = existVoice >= 2 ? "96px" : "63px";
+            mdOption.innerHTML += `<div class="moreOption" onmouseenter="moreOption(this)">
+            <svg class="optionTrigger" width="16" height="25" role="img"><title>选项</title><use xlink:href="#optionIcon" /></svg>
+            <div class="optionItems" style="width:${optionWidth};left:-${optionWidth}">` + `<div data-id="delMd" class="optionItem" title="删除">
+                <svg width="20" height="20"><use xlink:href="#delIcon" /></svg>
+            </div>
+            <div data-id="copyMd" class="optionItem" title="复制">
+                <svg width="20" height="20"><use xlink:href="#copyIcon" /></svg>
+            </div></div></div>`;
+            
+            mdOption.onclick = mdOptionEvent;
+        }
+        
+        let activeChatIdx = 0;
+        let data;
+
+        
+       
+        chatsData = []
+        
+        // 新建对话左边导航栏增加
+        const chatEleAdd = (idx) => {
+            // console.log(JSON.parse(window.localStorage.getItem('chats')),'chatEleAdd')
+            let chat = chatsData[idx];
+            let chatEle = document.createElement("div");
+            chatEle.className = "chatLi";
+            chatEle.innerHTML = `<svg width="24" height="24"><use xlink:href="#chatIcon" /></svg>
+                <div class="chatName">${chat.name}</div>
+                <div class="chatOption"><svg data-type="chatEdit" style="margin-right:4px" width="24" height="24" role="img"><title>编辑</title><use xlink:href="#chatEditIcon" /></svg>
+                <svg data-type="chatDel" width="24" height="24" role="img"><title>删除</title><use xlink:href="#delIcon" /></svg></div>`
+            chatListEle.appendChild(chatEle);
+            chatEle.onclick = chatEleEvent;
+            return chatEle;
+        };
+        // 新建对话按钮,新的会话的时候
+        const addNewChat = () => {
+            // alert(111111)
+            let chat = {name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}};
+            chatsData = JSON.parse(window.localStorage.getItem('claude3sonnet')) || []
+
+            
+            chatsData.push(chat);
+            // console.log(chatsData)
+            updateChats();
+        };
+        // 删除整个对话框对话
+        const delChat = (idx) => {
+            if (confirmAction("是否删除会话?")) {
+
+                // 清空对话框之前把数据存储到数据库中
+                let current_activeChatIdx = window.localStorage.getItem('activeChatIdxclaude3sonnet')
+                let current_data = JSON.parse(window.localStorage.getItem('claude3sonnet'))[current_activeChatIdx]
+                let selected_system_role = current_data.system_role
+                // 一旦清空对话的话，发送ajax 请求到后端，保存数据到数据库中。
+                $.ajax({
+                    contentType: 'application/json',
+                    url: '/chatgptapi/webuiclaude3sonnet', // 请求的 URL
+                    type: 'DELETE', // 请求的类型
+                    data: JSON.stringify({
+                            inputmessage: current_data.data,
+                            authorization: jwt_token,
+                            role: selected_system_role
+                        }), 
+                    success: function(response) {
+                        console.log(response)
+                    },
+                });
+
+                endAll();
+                if (idx === activeChatIdx) {
+                    if (idx - 1 >= 0) {
+                        activeChatIdx = idx - 1;
+                    } else if (idx === chatsData.length - 1) {
+                        activeChatIdx = chatsData.length - 2;
+                    }
+                }
+                // console.log(chatsData,'delChat2')
+                chatsData.splice(idx, 1);
+                // console.log(chatsData,'delChat3')
+                chatListEle.children[idx].remove();
+                // console.log(chatsData,'delChat4')
+                if (activeChatIdx === -1) {
+                    addNewChat();
+                    chatsData = [{name: "新的会话", data: [],system_role:{"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}}]
+                    window.localStorage.setItem('claude3sonnet',chatsData)
+                    activeChatIdx = 0;
+                    chatEleAdd(activeChatIdx);
+                    // 修改标题
+                    
+                    // console.log(chatsData,'delChat6')
+                }
+                // console.log(chatsData,'delChat7')
+
+                updateChats();
+                activeChat();
+                
+                let current_system_role = JSON.parse(window.localStorage.getItem('claude3sonnet'))[activeChatIdx].system_role
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
+                    // $("#chattitle").html(`ChatGPT 4-${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">Claude-3 sonnet-无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
+                }
+                
+
+            }
+        };
+        const endEditEvent = (ev) => {
+            let activeEle = document.getElementById("activeChatEdit")
+            if (!activeEle.contains(ev.target)) {
+                let ele = chatListEle.children[activeChatIdx];
+                chatsData[activeChatIdx].name = activeEle.value;
+                ele.children[1].textContent = activeEle.value;
+                ele.lastElementChild.remove();
+                updateChats();
+                document.body.removeEventListener("mousedown", endEditEvent, true);
+            }
+        };
+        const toEditChatName = (idx) => {
+            let inputEle = document.createElement("input");
+            inputEle.id = "activeChatEdit";
+            inputEle.value = chatsData[idx].name;
+            chatListEle.children[idx].appendChild(inputEle);
+            inputEle.focus();
+            document.body.addEventListener("mousedown", endEditEvent, true);
+        };
+        const chatEleEvent = function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            let idx = Array.prototype.indexOf.call(chatListEle.children, this);
+            if (ev.target.className === "chatLi") {
+                if (activeChatIdx !== idx) {
+                    endAll();
+                    activeChatIdx = idx;
+                    activeChat();
+                }
+                document.body.classList.remove("show-nav");
+            } else if (ev.target.dataset.type === "chatEdit") {
+                toEditChatName(idx);
+            } else if (ev.target.dataset.type === "chatDel") {
+                delChat(idx);
+            }
+        };
+        // 当前会话记录保存到 windows 本地存储
+        const updateChats = () => {
+            
+            // chatsData1 = window.localStorage.getItem('chats')
+            // console.log(JSON.parse(chatsData1),'updateChats')
+            
+            localStorage.setItem("claude3sonnet", JSON.stringify(chatsData));
+        };
+        const createConvEle = (className) => {
+            let div = document.createElement("div");
+            div.className = className;
+            chatlog.appendChild(div);
+            formatMdEle(div);
+            return div;
+        }
+        
+        // 现有会话记录函数
+        var activeChat = () => {
+            
+            // console.log(chatsData,1111111111111)
+            // data = [{'role':'user','content':''}]
+            data = chatsData[activeChatIdx]["data"] ;
+            Array.from(document.getElementsByClassName("activeChatLi")).forEach(item => {
+                item.classList.remove("activeChatLi");
+            });
+            chatListEle.children[activeChatIdx].classList.add("activeChatLi");
+            if (data[0] && data[0].role === "system") {
+                systemRole = data[0].content;
+                systemEle.value = systemRole;
+                localStorage.setItem("system", systemRole);
+            } else {
+                systemRole = "";
+                systemEle.value = "";
+                localStorage.setItem("system", systemRole);
+            }
+            chatlog.innerHTML = "";
+            if (systemRole ? data.length - 1 : data.length) {
+                let firstIdx = systemRole ? 1 : 0;
+                for (let i = firstIdx; i < data.length; i++) {
+                    if (data[i].role === "user") {
+                        createConvEle("request").children[0].textContent = data[i].content;
+                    } else {
+                        createConvEle("response").children[0].innerHTML = md.render(data[i].content) || "<br />";
+                    }
+                }
+            }
+            localStorage.setItem("activeChatIdxclaude3sonnet", activeChatIdx);
+
+            // 修改对话标题
+            try {
+                let current_system_role = JSON.parse(window.localStorage.getItem('claude3sonnet'))[activeChatIdx].system_role
+                // console.log(current_system_role.system_role_avatar,'current_system_role')
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">Claude3-sonnet 无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
+                }
+                
+            } catch (error) {
+                console.log(error)
+                $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">Claude3-sonnet 无角色`)
+                $('.background-image').css('background-image', `url(${default_background_url})`);
+            }
+            
+
+        };
+
+        // 角色选择框角色和点击事件,加载登录用户可以使用的角色,绑定点击事件,点击选择就存储到本地
+        var rolelist = JSON.parse(window.localStorage.getItem("rolelist",rolelist))
+        for (let index = 0; index < rolelist.length; index++) {
+                const element = rolelist[index];
+                $('#roleselect').append(
+                `<option value="${element.pk}" avatar="${element.fields.avatar}" background="${element.fields.background_image}">
+                    ${element.fields.system_role_nickname}
+                </option>`
+            )
+        }
+        var selectdom_render = $('#roleselect').awselect({
+            // background: "#0f37a9", //the dark blue background
+            active_background:"#dcdada", // the light blue background
+            // placeholder_color: "#97bce0", // the light blue placeholder color
+            // placeholder_active_color: "#0f37a9", // the dark blue placeholder color
+            // option_color:"#405463", // the option colors
+            vertical_padding: "20px", //top and bottom padding
+            horizontal_padding: "20px", // left and right padding,
+            immersive: true,
+        })
+        function selectRole_callback(value){
+            // 当前对话的id
+            let current_activeChatIdx = window.localStorage.getItem('activeChatIdxclaude3sonnet')
+            // console.log('当前对话IDselectRole_callback',current_activeChatIdx)
+            // 当前选择号的属性的角色,和选择的 avatar 的地址
+            let selected_role_title = $('#roleselect').find(':selected').text()
+            let selected_role_avatar = $('#roleselect').find(':selected').attr("avatar")
+            let selected_role_background = $('#roleselect').find(':selected').attr("background")
+            // console.log(selected_role_background,'selected_role_background')
+            
+            // 把所有对话记录拿出来
+            let allChats_data = JSON.parse(window.localStorage.getItem('claude3sonnet'))
+            let current_chat = allChats_data[current_activeChatIdx]
+            // console.log(allChats_data,'selectRole_callback')
+            
+
+            if(value){
+                current_chat['system_role'] = {"system_role_id":value,"selected_role_title":selected_role_title,"system_role_avatar":selected_role_avatar,"system_role_background":selected_role_background}
+                
+               
+            }else{
+                current_chat['system_role'] = {"system_role_id":'',"selected_role_title":'',"system_role_avatar":"","system_role_background":""}
+            }
+            allChats_data.splice(current_activeChatIdx,1,current_chat)
+            window.localStorage.setItem('claude3sonnet',JSON.stringify(allChats_data))
+            // console.log(allChats_data,'selectRole_callback')
+            // 修改标题
+            $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${selected_role_avatar}" alt="" >${selected_role_title}`)
+            $('.background-image').css('background-image', `url({{MEDIA_URL}}${selected_role_background})`);
+            
+        }
+
+        // 按钮新建对话点击事件
+        newChatEle.onclick = () => {
+            endAll();
+            addNewChat();
+            activeChatIdx = chatsData.length - 1;
+            chatEleAdd(activeChatIdx);
+            activeChat();
+            selectRole_callback()
+            
+
+            let new_activeChatIdx = window.localStorage.getItem('activeChatIdxclaude3sonnet')
+            
+            
+
+            // 修改标题
+            $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">Claude3-sonnet 无角色`)
+            $('.background-image').css('background-image', `url(${default_background_url})`);
+            
+
+            
+            
+        };
+
+        // 一刷新页面时候加载,取出对话记录，加载到对话框
+        const initChats = () => {
+            
+            let localChats = localStorage.getItem("claude3sonnet");
+            let localChatIdx = localStorage.getItem("activeChatIdxclaude3sonnet")
+            activeChatIdx = (localChatIdx && parseInt(localChatIdx)) || 0;
+            if (localChats) {
+                chatsData = JSON.parse(localChats);
+                for (let i = 0; i < chatsData.length; i++) {
+                    chatEleAdd(i);
+                }
+            } else {
+                
+                addNewChat();
+                chatEleAdd(activeChatIdx);
+            }
+        };
+
+        initChats();
+        activeChat();
+
+        // 导出对话记录
+        document.getElementById("exportChat").onclick = () => {
+            if (loading) {
+                stopLoading();
+            }
+            let blob = new Blob([JSON.stringify(chatsData, null, 2)], {type: "application/json"});
+            let date = new Date();
+            let fileName = "chats-" + date.getFullYear() + "-" + (date.getMonth() + 1) + "-" + date.getDate() + ".json";
+            downBlob(blob, fileName);
+        };
+        
+        const blobToText = (blob) => {
+            return new Promise((res, rej) => {
+                let reader = new FileReader();
+                reader.readAsText(blob);
+                reader.onload = () => {
+                    res(reader.result);
+                }
+                reader.onerror = (error) => {
+                    rej(error);
+                }
+            })
+        };
+        // 导入会话记录
+        document.getElementById("importChatInput").onchange = function () {
+            let file = this.files[0];
+            blobToText(file).then(text => {
+                try {
+                    let json = JSON.parse(text);
+                    let checked = json.every(item => {
+                        return item.name !== void 0 && item.data !== void 0;
+                    });
+                    if (checked) {
+                        while (json.length) {
+                            chatsData.push(json.shift());
+                            chatEleAdd(chatsData.length - 1);
+                        }
+                        updateChats();
+                    } else {
+                        throw new Error("格式检查不通过")
+                    }
+                } catch (e) {
+                    notyf.error("导入失败，请检查文件是否正确！")
+                }
+                this.value = "";
+            })
+        };
+        // 清空对话记录
+        document.getElementById("clearChat").onclick = () => {
+            if (confirmAction("是否清空所有会话?")) {
+                chatsData.length = 0;
+                chatListEle.innerHTML = "";
+                endAll();
+                addNewChat();
+                activeChatIdx = 0;
+                chatEleAdd(activeChatIdx);
+                updateChats();
+                activeChat();
+                let current_system_role = JSON.parse(window.localStorage.getItem('claude3sonnet'))[activeChatIdx].system_role
+                console.log(current_system_role,'current_system_role')
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
+                    // $("#chattitle").html(`Claude-3 sonnet 4-${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">Claude3-sonnet 无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
+                }
+            }
+        };
+        const endAll = () => {
+           
+            if (loading) stopLoading();
+
+        };
+
+        // 初始化右侧按钮配置
+        const initSetting = () => {
+            const modelEle = document.getElementById("preSetModel");
+            // let localModel = localStorage.getItem("modelVersion");
+            // 模型名称,这里写死
+            let localModel = "Claude3-sonnet";
+            if (localModel) {
+                modelVersion = localModel;
+                modelEle.value = localModel;
+            }
+            modelEle.onchange = () => {
+                modelVersion = modelEle.value;
+                localStorage.setItem("modelVersion", modelVersion);
+            }
+            modelEle.dispatchEvent(new Event("change"));
+
+            // api host 地址，一会要写死 默认是 https://api.openai.com/
+            const apiHostEle = document.getElementById("apiHostInput");
+            // let localApiHost = localStorage.getItem("APIHost");
+            let localApiHost = "https://api.openai.com/"
+            if (localApiHost) {
+                apiHost = localApiHost;
+                apiHostEle.value = localApiHost;
+            }
+            apiHostEle.onchange = () => {
+                apiHost = apiHostEle.value;
+                if (apiHost.length && !apiHost.endsWith("/")) {
+                    apiHost += "/";
+                    apiHostEle.value = apiHost;
+                }
+                localStorage.setItem("APIHost", apiHost);
+            }
+            apiHostEle.dispatchEvent(new Event("change"));
+
+            // opai 的key,上线的时候可以不写,忽略
+            const keyEle = document.getElementById("keyInput");
+            let localKey = localStorage.getItem("APIKey");
+            if (localKey) {
+                customAPIKey = localKey;
+                keyEle.value = localKey;
+            }
+            keyEle.onchange = () => {
+                customAPIKey = keyEle.value;
+                localStorage.setItem("APIKey", customAPIKey);
+            }
+            keyEle.dispatchEvent(new Event("change"));
+            if (systemRole === void 0) {
+                let localSystem = localStorage.getItem("system");
+                if (localSystem) {
+                    systemRole = localSystem;
+                    systemEle.value = localSystem;
+                    data.unshift({role: "system", content: systemRole});
+                    updateChats();
+                } else {
+                    systemRole = systemEle.value;
+                }
+            }
+
+            // 角色信息，原有的功能是写进来，然后保存 为system
+            systemEle.onchange = () => {
+                systemRole = systemEle.value;
+                localStorage.setItem("system", systemRole);
+                if (systemRole) {
+                    if (data[0] && data[0].role === "system") {
+                        data[0].content = systemRole;
+                    } else {
+                        data.unshift({role: "system", content: systemRole});
+                    }
+                } else if (data[0] && data[0].role === "system") {
+                    data.shift();
+                }
+                updateChats();
+            }
+
+            // 原来系统的预设的角色，这里可以忽略
+            const preEle = document.getElementById("preSetSystem");
+            preEle.onchange = () => {
+                let val = preEle.value;
+                if (val && presetRoleData[val]) {
+                    systemEle.value = presetRoleData[val];
+                } else {
+                    systemEle.value = "";
+                }
+                systemEle.dispatchEvent(new Event("change"));
+                systemEle.focus();
+            }
+
+            // top_p 参数
+            const topEle = document.getElementById("top_p");
+            let localTop = localStorage.getItem("top_p");
+            if (localTop) {
+                roleNature = parseFloat(localTop);
+                topEle.value = localTop;
+            }
+            topEle.oninput = () => {
+                topEle.style.backgroundSize = (topEle.value - topEle.min) * 100 / (topEle.max - topEle.min) + "% 100%";
+                roleNature = parseFloat(topEle.value);
+                localStorage.setItem("top_p", topEle.value);
+            }
+            topEle.dispatchEvent(new Event("input"));
+
+            // temperature 参数
+            const tempEle = document.getElementById("temp");
+            let localTemp = localStorage.getItem("temp");
+            if (localTemp) {
+                roleTemp = parseFloat(localTemp);
+                tempEle.value = localTemp;
+            }
+            tempEle.oninput = () => {
+                tempEle.style.backgroundSize = (tempEle.value - tempEle.min) * 100 / (tempEle.max - tempEle.min) + "% 100%";
+                roleTemp = parseFloat(tempEle.value);
+                localStorage.setItem("temp", tempEle.value);
+            }
+            tempEle.dispatchEvent(new Event("input"));
+
+            //  打印速度，这里写死
+            const speedEle = document.getElementById("textSpeed");
+            // let localSpeed = localStorage.getItem("textSpeed");
+            let localSpeed = 100;
+            if (localSpeed) {
+                textSpeed = parseFloat(speedEle.min) + (speedEle.max - localSpeed);
+                speedEle.value = localSpeed;
+            }
+            speedEle.oninput = () => {
+                speedEle.style.backgroundSize = (speedEle.value - speedEle.min) * 100 / (speedEle.max - speedEle.min) + "% 100%";
+                textSpeed = parseFloat(speedEle.min) + (speedEle.max - speedEle.value);
+                localStorage.setItem("textSpeed", speedEle.value);
+            }
+            speedEle.dispatchEvent(new Event("input"));
+
+            // 连续对话，写死为 true
+            const contEle = document.getElementById("enableCont");
+            // let localCont = localStorage.getItem("enableCont");
+            let localCont = "true";
+            if (localCont) {
+                enableCont = localCont === "true";
+                contEle.checked = enableCont;
+            }
+            contEle.onchange = () => {
+                enableCont = contEle.checked;
+                localStorage.setItem("enableCont", enableCont);
+            }
+            contEle.dispatchEvent(new Event("change"));
+            
+            // 长回复，写死，true
+            const longEle = document.getElementById("enableLongReply");
+            // let localLong = localStorage.getItem("enableLongReply");
+            let localLong = "true";
+            if (localLong) {
+                enableLongReply = localLong === "true";
+                longEle.checked = enableLongReply;
+            }
+            longEle.onchange = () => {
+                enableLongReply = longEle.checked;
+                localStorage.setItem("enableLongReply", enableLongReply);
+            }
+            longEle.dispatchEvent(new Event("change"));
+        };
+        initSetting();
+        
+        document.getElementById("loadMask").style.display = "none";
+        const closeEvent = (ev) => {
+            if (settingEle.contains(ev.target)) return;
+            if (!dialogEle.contains(ev.target)) {
+                dialogEle.style.display = "none";
+                document.removeEventListener("mousedown", closeEvent, true);
+                settingEle.classList.remove("showSetting");
+            }
+        }
+        settingEle.onmousedown = () => {
+            dialogEle.style.display = dialogEle.style.display === "block" ? "none" : "block";
+            if (dialogEle.style.display === "block") {
+                document.addEventListener("mousedown", closeEvent, true);
+                settingEle.classList.add("showSetting");
+            } else {
+                document.removeEventListener("mousedown", closeEvent, true);
+                settingEle.classList.remove("showSetting");
+            }
+        }
+        let delayId;
+        const delay = () => {
+            return new Promise((resolve) => delayId = setTimeout(resolve, textSpeed)); //打字机时间间隔
+        }
+
+        
+        
+        
+       
+        
+
+        const confirmAction = (prompt) => {
+            if (window.confirm(prompt)) {
+                return true;
+            }
+            else {
+                return false;
+            }
+        };
+        let controller;
+        let controllerId;
+        let refreshIdx;
+        let currentResEle;
+        let progressData = "";
+
+
+        // 发送请求到后端 api
+        const streamGen = async (long) => {
+            controller = new AbortController();
+            controllerId = setTimeout(() => {
+                notyf.error("请求超时，请稍后重试！");
+                stopLoading();
+            }, 30000);
+            // 请求头
+            let headers = {"Content-Type": "application/json"};
+            if (customAPIKey) headers["Authorization"] = "Bearer " + customAPIKey;
+            let isRefresh = refreshIdx !== void 0;
+            if (isRefresh) {
+                currentResEle = chatlog.children[systemRole ? refreshIdx - 1 : refreshIdx];
+            } else if (!currentResEle) {
+                currentResEle = createConvEle("response");
+                currentResEle.children[0].innerHTML = "<br />";
+                currentResEle.dataset.loading = true;
+                scrollToBottom();
+            }
+            let idx = isRefresh ? refreshIdx : data.length;
+            
+            let dataSlice;
+            if (long) {
+                idx = isRefresh ? refreshIdx : data.length - 1;
+                dataSlice = [data[idx - 1], data[idx]];
+                // if (systemRole) {dataSlice.unshift(data[0]);}
+            } else if (enableCont) {
+                dataSlice = data.slice(0, idx);
+            } else {
+                dataSlice = [data[idx - 1]];
+                if (systemRole) {dataSlice.unshift(data[0]);}
+            }
+
+            // 在系统信息中,从头部压入系统角色
+            // dataSlice.unshift({"role": "system", "content": "You are a helpful assistant."})
+            var jwt_token = window.localStorage.getItem("jwt_token")
+            var currentChatIdx = window.localStorage.getItem('activeChatIdxclaude3sonnet')
+            var selected_system_role = JSON.parse(window.localStorage.getItem("claude3sonnet"))[currentChatIdx].system_role
+        
+            try {
+                const res = await fetch("/chatgptapi/webuiclaude3sonnet", {
+                    // openai 官方地址
+                // const res = await fetch(apiHost + API_URL, {
+                    method: "POST",
+                    headers,
+                    body: JSON.stringify({
+                        inputmessage: dataSlice,
+                        authorization: jwt_token,
+                        role: selected_system_role
+
+                        // messages: dataSlice,
+                        // model: modelVersion,
+                        // stream: true,
+                        // temperature: roleTemp,
+                        // top_p: roleNature
+                    }),
+                    signal: controller.signal
+                });
+                clearTimeout(controllerId);
+                controllerId = void 0;
+                if (res.status !== 200) {
+                    if (res.status === 401) {
+                        notyf.error("API key错误或失效，请检查API key！")
+                    } else if (res.status === 400) {
+                        notyf.error("请求内容过大，请删除部分对话或打开设置关闭连续对话！");
+                    } else if (res.status === 404) {
+                        notyf.error("无权使用此模型，请打开设置选择其他GPT模型！");
+                    } else if (res.status === 429) {
+                        notyf.error(res.statusText ? "触发API调用频率限制，请稍后重试！" : "API使用超出限额，请检查您的账单！");
+                    } else  {
+                        console.log(res)
+                        notyf.error("网关错误或超时，请稍后重试！");
+                    }
+                    stopLoading();
+                    return;
+                }
+                const decoder = new TextDecoder('utf-8');
+                const reader = res.body.getReader();
+                const readChunk = async () => {
+                    return reader.read().then(async ({value, done}) => {
+                        if (!done) {
+                           
+                            // console.log('beforedecode',value)
+                            value = decoder.decode(value,{ stream: true });
+                            // console.log('value',value,done,typeof(value))
+
+                            let chunks = [];
+                            chunks.unshift(value);
+                            // let chunks = value.split(/\n{2}/g);
+                            // console.log('chunks',chunks)
+                            // chunks = chunks.filter(item => {
+                                // return item.trim();
+                            //     return item
+                            // });
+                            // console.log('chunksfilter',chunks,typeof(chunks))
+                            for (let i = 0; i < chunks.length; i++) {
+                                let chunk = chunks[i];
+                                if (chunk) {
+                                    let payload;
+                                  
+                                    try {
+                                        // 开始解析 chunk
+                                        // openai 官网连接地址使用这个
+                                        // payload = JSON.parse(chunk.slice(6));
+                                        // 自己连接使用这个
+                                        // payload = JSON.parse(chunk)
+                                        payload = chunk
+                                        // console.log('payload3',payload)
+
+                                        // 如果报错返回的数据格式式result = {'code':200,'message':'您的用户名找不到,请联系老朱',"voice":voice_url}
+                                        // 把里面的message 拿出来跳出弹窗
+                                        if(payload.message){
+                                            alert(payload.message)
+                                        } 
+                                        
+                                    } catch (e) {
+                                        // 如果解析失败要考虑如下情况
+                                        // 把""去掉
+                                        payload = chunk.replace(/"/g, '');
+                                        
+                                        // 判断是不是含有utf-8编码
+                                        function containsUtf8EncodedString(str) {
+                                            const regex = /\\u[\dA-Fa-f]{4}/g;
+                                            return regex.test(str);
+                                        }
+                                        try {
+                                            if (payload.includes("\\n")){
+                                                // console.log('这个字符串包含\\n');
+                                                // 将连续的反斜杠（两个反斜杠）替换为一个
+                                                payload = payload.replace(/\\\\/g, '\\');
+                                                payload = JSON.parse(`"${payload}"`);
+                                            }
+
+                                            if (containsUtf8EncodedString(payload)){
+                                                // console.log('这个字符串是 utf-8');
+                                                // 将连续的反斜杠（两个反斜杠）替换为一个
+                                                payload = payload.replace(/\\\\/g, '\\');
+                                                payload = JSON.parse(`"${payload}"`);
+                                            }
+                                            
+                                            if(payload.includes("\\")){
+                                                // console.log('这个字符串包含\\ ');
+                                                payload = payload.replace(/\\/g, '');
+                                            }
+
+                                        } catch (error) {
+                                            // payload.replace(/\\/g, '');
+                                            // console.log('这个字符串包含\\catch ');
+                                            payload = payload.replace(/\\/g, '');
+                                        }
+
+                                        // if (payload.includes('\n')) {
+                                        //     console.log('这个字符串包含了换行符');
+                                        //     // payload.replace('\\n','\n')
+                                        // }
+                                        // console.log('payload4',payload,typeof(payload))
+                    
+                                        // break;
+                                    }
+                                    if (!payload){
+                                    // if (payload.choices[0].finish_reason) {
+                                        // console.log('payload5',payload)
+                                        let lenStop = payload.choices[0].finish_reason === "length";
+                                        let longReplyFlag = enableLongReply && lenStop;
+                                        if (!enableLongReply && lenStop) {currentResEle.children[1].children[0].className = "halfRefReq"}
+                                        else {currentResEle.children[1].children[0].className = "refreshReq"};
+                                        
+                                        break;
+                                    } else {
+                                        // console.log('content0',payload)
+                                        let content = payload;
+                                        // console.log('content1',content)
+                                        // let content = payload.choices[0].delta.content;
+                                        if (content) {
+                                            if (!progressData && !content) continue;
+                                            // if (!progressData && !content.trim()) continue;
+                                            
+                                            if (progressData) await delay();
+                                            progressData += content;
+                                            // 打印信息
+                                            // console.log(progressData,typeof(progressData))
+                                            currentResEle.children[0].innerHTML = md.render(progressData);
+                                            if (!isRefresh) {
+                                                scrollToBottom();
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            return readChunk();
+                        } else {
+                            if (isRefresh) {
+                                data[refreshIdx].content = progressData;
+                                if (longReplyFlag) return streamGen(true);
+                            } else {
+                                if (long) {data[data.length - 1].content = progressData}
+                                else {data.push({role: "assistant", content: progressData})}
+                                if (longReplyFlag) return streamGen(true);
+                            }
+                            stopLoading(false);
+                        }
+                    });
+                };
+                await readChunk();
+            } catch (e) {
+                if (e.message.indexOf("aborted") === -1) {
+                    notyf.error("访问接口失败，请检查接口！")
+                    stopLoading();
+                }
+            }
+        };
+        const loadAction = (bool) => {
+            loading = bool;
+            sendBtnEle.disabled = bool;
+            sendBtnEle.className = bool ? " loading" : "loaded";
+            stopEle.style.display = bool ? "flex" : "none";
+            textInputEvent();
+        }
+        const stopLoading = (abort = true) => {
+            stopEle.style.display = "none";
+            if (abort) {
+                controller.abort();
+                if (controllerId) clearTimeout(controllerId);
+                if (delayId) clearTimeout(delayId);
+                if (refreshIdx !== void 0) {data[refreshIdx].content = progressData}
+                else if (data[data.length - 1].role === "assistant") {data[data.length - 1].content = progressData}
+                else {data.push({role: "assistant", content: progressData})}
+                
+            }
+            // console.log(chatsData,'stopLoading')
+            updateChats();
+            controllerId = delayId = refreshIdx = void 0;
+            
+            currentResEle.dataset.loading = false;
+            currentResEle = null;
+            progressData = "";
+            loadAction(false);
+        }
+        const generateText = async (message) => {
+            // console.log(chatsData,'generateText0')
+            windows_local_chats_data = JSON.parse(window.localStorage.getItem('claude3sonnet'))
+            // console.log(chatsData,'generateText0.1')
+            chatsData[activeChatIdx]['system_role'] = windows_local_chats_data[activeChatIdx]['system_role']
+
+
+            loadAction(true);
+            let requestEle = createConvEle("request");
+            requestEle.children[0].textContent = message;
+            data.push({role: "user", content: message});
+            if (chatsData[activeChatIdx].name === "新的会话") {
+                if (message.length > 50) {
+                    message = message.slice(0, 47) + "...";
+                }
+                chatsData[activeChatIdx].name = message;
+                chatListEle.children[activeChatIdx].children[1].textContent = message;
+            }
+            // console.log(chatsData,'generateText')
+            updateChats();
+            scrollToBottom();
+            await streamGen();
+        };
+        textarea.onkeydown = (e) => {
+            if (e.keyCode === 13 && !e.shiftKey) {
+                e.preventDefault();
+                genFunc();
+            }
+        };
+        const genFunc = function () {
+            if (recing) {
+                toggleRecEv();
+            }
+            let message = textarea.value.trim();
+            if (message.length !== 0) {
+                if (loading === true) return;
+                textarea.value = "";
+                textarea.style.height = "47px";
+                generateText(message);
+            }
+        };
+        sendBtnEle.onclick = genFunc;
+        stopEle.onclick = stopLoading;
+        document.getElementById("clearConv").onclick = () => {
+            if (!loading && confirmAction("是否清空会话?")) {
+
+                // 清空对话框之前把数据存储到数据库中
+                let current_activeChatIdx = window.localStorage.getItem('activeChatIdxclaude3sonnet')
+                let current_data = JSON.parse(window.localStorage.getItem('claude3sonnet'))[current_activeChatIdx]
+                let selected_system_role = current_data.system_role
+                // 一旦清空对话的话，发送ajax 请求到后端，保存数据到数据库中。
+                $.ajax({
+                    contentType: 'application/json',
+                    url: '/chatgptapi/webuiclaude3sonnet', // 请求的 URL
+                    type: 'DELETE', // 请求的类型
+                    data: JSON.stringify({
+                            inputmessage: current_data.data,
+                            authorization: jwt_token,
+                            role: selected_system_role
+                        }), 
+                    success: function(response) {
+                        console.log(response)
+                    },
+                });
+
+                
+                if (systemRole) {data.length = 1}
+                else {data.length = 0}
+                chatlog.innerHTML = "";
+                updateChats();
+                let current_system_role = JSON.parse(window.localStorage.getItem('claude3sonnet'))[activeChatIdx].system_role
+                if (current_system_role.selected_role_title){
+                    $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="">${current_system_role.selected_role_title}`)
+                    $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
+                }else{
+                    $("#chattitle").html(`<img src="${default_avatar_url}" alt="" class="avatarimage">Claude3-sonnet 无角色`)
+                    $('.background-image').css('background-image', `url(${default_background_url})`);
+                }
+
+
+
+            }
+        }
+    </script>
+    <link href="//cdn.staticfile.org/github-markdown-css/5.2.0/github-markdown-light.min.css" rel="stylesheet">
+    <link href="//cdn.staticfile.org/highlight.js/11.7.0/styles/github.min.css" rel="stylesheet">
+    <link href="//cdn.staticfile.org/KaTeX/0.16.4/katex.min.css" rel="stylesheet">
+    <link href="//npm.elemecdn.com/markdown-it-texmath@1.0.0/css/texmath.css" rel="stylesheet">
+    <script defer>
+
+        const downRoleController = new AbortController();
+        setTimeout(() => {
+            downRoleController.abort();
+        }, 10000);
+        // 初始角色配置
+        // const preEle = document.getElementById("preSetSystem");
+        // fetch("https://cdn.jsdelivr.net/gh/PlexPt/awesome-chatgpt-prompts-zh/prompts-zh.json", {
+        //     signal: downRoleController.signal
+        // }).then(async (response) => {
+        //     let res = await response.json();
+        //     for (let i = 0; i < res.length; i++) {
+        //         let key = "act" + i;
+        //         presetRoleData[key] = res[i].prompt.trim();
+        //         let optionEle = document.createElement("option");
+        //         optionEle.text = res[i].act;
+        //         optionEle.value = key;
+        //         preEle.options.add(optionEle);
+        //     }
+        // }).catch(e => { })
+    </script>
+</body>
+
+</html>

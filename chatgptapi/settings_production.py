@@ -229,6 +229,8 @@ JWT_TOKEN_KEY = os.environ.get('JWT_TOKEN_KEY')
 OPENAI_SECRETKEY = os.environ.get('OPENAI_SECRETKEY')
 OPENAI_ORG_ID = os.environ.get('OPENAI_ORG_ID')
 
+# claude 配置
+ANTHROPIC_SECRETKEY = os.environ.get('ANTHROPIC_SECRETKEY')
 
 ALIYUN_REDIS_HOST = os.environ.get('ALIYUN_REDIS_HOST')
 ALIYUN_REDIS_PORT = os.environ.get('ALIYUN_REDIS_PORT')
@@ -263,6 +265,16 @@ SIMPLEUI_CONFIG = {
                         'icon': 'fa fa-user-plus',
                         'url': '/chatgptapi/webuigpt4'
                     },
+                    {
+                        'name':'Claude-3-Haiku',
+                        'icon': 'fa fa-user-pen',
+                        'url':'/chatgptapi/webuiclaude3haiku'
+                    },
+                    {
+                        'name':'Claude-3-Sonnet',
+                        'icon': 'fa fa-user-check',
+                        'url':'/chatgptapi/webuiclaude3sonnet'
+                    }
                     
                     ]
                 }, 
