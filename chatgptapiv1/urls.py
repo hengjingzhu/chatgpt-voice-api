@@ -1,7 +1,7 @@
 
 from django.urls import path
 from chatgptapiv1.myviews.web_views import ResponseTextMessageOnly,ShortVoiceContent,IndexView,WebUIChat,WebUIChat_gpt4,WebUIClaude3_Haiku,WebUIClaude3_Sonnet
-from chatgptapiv1.myviews.api_view import GPT_API
+from chatgptapiv1.myviews.api_view import GPT_API,GPT_API_STREAM_V2,GPT_API_V2,CLAUDE_API_STREAM,CLAUDE_API
 from chatgptapiv1.myviews.bilibili_bullet import bullet_font_view,bullet_font_streaming_response
 
 urlpatterns = [
@@ -18,6 +18,13 @@ urlpatterns = [
     
     # 纯 chatgpt接口，供外部调用
     path('gptapi',GPT_API.as_view()),
+    
+    path('gptapiv2',GPT_API_V2.as_view()),
+    path('gptapistreamv2',GPT_API_STREAM_V2.as_view()),
+    
+    # claude 接口，供外部调用
+    path('claudeapi',CLAUDE_API.as_view()),
+    path('claudeapistream',CLAUDE_API_STREAM.as_view()),
     
     # bilibili bullet comment style
     path('bilibili_bullet_page',bullet_font_view),

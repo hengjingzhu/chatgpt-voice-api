@@ -13,6 +13,7 @@ def check_jwt(fn):
         # 从请求体中获取 post 消息
         received_message_dict = json.loads(request.body)
         
+        # print('received_message_dict',received_message_dict)
 
         # 开发环境不启动 nginx 配置
         #voice_url_base = settings.MY_HOST_NAME+settings.STATIC_URL
