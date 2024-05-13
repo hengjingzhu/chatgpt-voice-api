@@ -699,7 +699,7 @@ class WebUIChat_gpt4(View):
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
 
-        OPEN_AI_MODEL_NAME_gpt4_8k = 'gpt-4-turbo-preview'    
+        OPEN_AI_MODEL_NAME_gpt4_8k = 'gpt-4o'
 
         received_message_dict = json.loads(request.body)
         
@@ -1136,7 +1136,7 @@ class WebUIClaude3_Haiku(View):
 
 
 
-# claude-3-sonnet 网页聊天框,
+# claude-3-sonnet 网页聊天框
 class WebUIClaude3_Sonnet(View):
 
     
