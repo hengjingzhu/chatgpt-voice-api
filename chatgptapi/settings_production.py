@@ -271,7 +271,7 @@ SIMPLEUI_CONFIG = {
                         'url':'/chatgptapi/webuiclaude3haiku'
                     },
                     {
-                        'name':'Claude-3-Sonnet',
+                        'name':'Claude-3.5-Sonnet',
                         'icon': 'fa fa-user-check',
                         'url':'/chatgptapi/webuiclaude3sonnet'
                     }
