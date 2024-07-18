@@ -421,7 +421,7 @@ class ResponseTextMessageOnly(View):
 
 
 
-# gpt-3.5网页聊天框
+# gpt-4o-mini网页聊天框
 class WebUIChat(View):
 
     openai.organization = ORG_ID
@@ -461,7 +461,7 @@ class WebUIChat(View):
     def post(self,request,*args,**kwargs):
         
         
-        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-3.5-turbo'
+        OPEN_AI_MODEL_NAME_gpt3 = 'gpt-4o-mini'
         
 
         received_message_dict = json.loads(request.body)

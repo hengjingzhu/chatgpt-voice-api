@@ -256,12 +256,12 @@ SIMPLEUI_CONFIG = {
                     'name': '对话聊天',
                     'icon': 'fas fa-user-shield',
                     'models': [{
-                        'name': 'GPT-3.5-16k',
+                        'name': 'GPT-4o-mini',
                         'icon': 'fa fa-user',
                         'url': '/chatgptapi/webui'
                     },
                     {
-                        'name': 'GPT-4-128k',
+                        'name': 'GPT-4o',
                         'icon': 'fa fa-user-plus',
                         'url': '/chatgptapi/webuigpt4'
                     },

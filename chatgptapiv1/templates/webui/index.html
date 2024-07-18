@@ -9,7 +9,7 @@
 
 <head>
     <meta charset="utf-8">
-    <title>ChatGPT 3.5</title>
+    <title>ChatGPT 4o mini</title>
 
     <link rel="stylesheet" href="{% static 'css/web-ui/awselect.css' %}">
     
@@ -1965,7 +1965,7 @@
                     // $("#chattitle").html(`ChatGPT 3.5-${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4o-mini-无角色`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
                 }
                 
@@ -2064,13 +2064,13 @@
                     $("#chattitle").html(`<img src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="" class="avatarimage">${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4o-mini-无角色`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
                 }
                 
             } catch (error) {
                 console.log(error)
-                $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
+                $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4o-mini-无角色`)
                 $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
             }
             
@@ -2144,7 +2144,7 @@
             
 
             // 修改标题
-            $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
+            $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4o-mini-无角色`)
             $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
             
 
@@ -2238,7 +2238,7 @@
                     // $("#chattitle").html(`ChatGPT 3.5-${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4o-mini-无角色`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
                 }
             }
@@ -2254,7 +2254,7 @@
             const modelEle = document.getElementById("preSetModel");
             // let localModel = localStorage.getItem("modelVersion");
             // 模型名称,这里写死
-            let localModel = "gpt-3.5-turbo";
+            let localModel = "gpt-4o-mini";
             if (localModel) {
                 modelVersion = localModel;
                 modelEle.value = localModel;
@@ -2764,7 +2764,7 @@
                     $("#chattitle").html(`<img class="avatarimage" src="{{MEDIA_URL}}${current_system_role.system_role_avatar}" alt="">${current_system_role.selected_role_title}`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${current_system_role.system_role_background})`);
                 }else{
-                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 3.5-无角色`)
+                    $("#chattitle").html(`<img src="{{MEDIA_URL}}${default_avatar_url}" alt="" class="avatarimage">ChatGPT 4o-mini-无角色`)
                     $('.background-image').css('background-image', `url({{MEDIA_URL}}${default_background_url})`);
                 }
 

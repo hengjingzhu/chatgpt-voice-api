@@ -30,7 +30,7 @@ class UserInfo(AbstractUser):
                                                         ],help_text="最大不超过4096")
     
     jwt_token = models.CharField(max_length=512, verbose_name='jwt令牌',blank=True)
-    GPT_4_8K = models.BooleanField('GPT4_8k开通',default=False)
+    GPT_4_8K = models.BooleanField('GPT4o_128k开通',default=False)
     
     
     status = models.CharField("客户状态",blank=True,null=True,max_length=255)    
@@ -244,7 +244,7 @@ class BlackBox(models.Model):
     user = models.ForeignKey('UserInfo',verbose_name="用户名",on_delete=models.CASCADE,default=1)
     RoleVoiceAttribution = models.ForeignKey('RoleVoiceAttribution',verbose_name="角色属性",on_delete=models.CASCADE,default=1)
 
-    GPT_model_name = models.CharField('模型名称',default='gpt-3.5-turbo',max_length=64)
+    GPT_model_name = models.CharField('模型名称',default='gpt-4o-mini',max_length=64)
     diolog = models.JSONField('HistoryDialog',null=True,blank=True)
 
     created_time = models.DateTimeField('创建时间',auto_now_add=True)
