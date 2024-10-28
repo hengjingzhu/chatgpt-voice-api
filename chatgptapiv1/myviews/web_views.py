@@ -1176,7 +1176,7 @@ class WebUIClaude3_Sonnet(View):
     @method_decorator(check_jwt)
     def post(self,request,*args,**kwargs):
 
-        ANTHROPIC_AI_MODEL_NAME_CLAUDE3 = 'claude-3-5-sonnet-20240620'    
+        ANTHROPIC_AI_MODEL_NAME_CLAUDE3 = 'claude-3-5-sonnet-latest'    
 
         received_message_dict = json.loads(request.body)
         
