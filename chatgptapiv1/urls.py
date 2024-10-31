@@ -3,6 +3,7 @@ from django.urls import path
 from chatgptapiv1.myviews.web_views import ResponseTextMessageOnly,ShortVoiceContent,IndexView,WebUIChat,WebUIChat_gpt4,WebUIClaude3_Haiku,WebUIClaude3_Sonnet
 from chatgptapiv1.myviews.api_view import GPT_API,GPT_API_STREAM_V2,GPT_API_V2,CLAUDE_API_STREAM,CLAUDE_API
 from chatgptapiv1.myviews.bilibili_bullet import bullet_font_view,bullet_font_streaming_response
+from chatgptapiv1.myviews.JWT_varification import GPS_location_JWT_Varification
 
 urlpatterns = [
     # chatgpt文本回复
@@ -29,4 +30,7 @@ urlpatterns = [
     # bilibili bullet comment style
     path('bilibili_bullet_page',bullet_font_view),
     path('bilibili_bullet_streaming_response',bullet_font_streaming_response),
+    
+    # gps_location_api 
+    path('gps_location_jwt_varification',GPS_location_JWT_Varification.as_view())
 ]

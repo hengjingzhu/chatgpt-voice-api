@@ -11,12 +11,13 @@ from chatgptapiv1.models import BlackBox
 def check_jwt(fn):
     def warp(request,*args,**kwargs):
         # 从请求体中获取 post 消息
+        print('received_message_dict',request.body)
         received_message_dict = json.loads(request.body)
         
         # print('received_message_dict',received_message_dict)
 
         # 开发环境不启动 nginx 配置
-        #voice_url_base = settings.MY_HOST_NAME+settings.STATIC_URL
+        # voice_url_base = settings.MY_HOST_NAME+settings.STATIC_URL
 
         #生产环境 启动 nginx 的时候配置
         voice_url_base = settings.NGINX_HOST_NAME+settings.STATIC_URL
@@ -71,6 +72,7 @@ def check_jwt(fn):
             # 如果走到了这里，那说明是可以继续往下走的，把 userinfo_redis 信息和传输过来的 inputmessage 传给工作的函数
             kwargs['existed_userinfo_redis'] = userinfo_redis
             kwargs['inputmessage'] = inputmessage
+             
             #print(kwargs)
 
         # 令牌过期客户,# jwt 解密拿到信息,如果时间过期自动抛出ExpiredSignatureError，如果解码失败就到解码失败的错误中
